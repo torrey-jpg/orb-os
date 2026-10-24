@@ -1,4 +1,5 @@
 #include "app_shell.h"
+#include "warp.h"      // Kevin's Orb: hyperspace transition between apps
 #include "display.h"   // markInput — click-to-pixels timing
 #ifdef ARDUINO
 #include <Arduino.h>
@@ -245,8 +246,17 @@ namespace {
         // The one place the switcher actually loads an app. load() handles the outgoing
         // onExit, the screen swap, capture state, and the incoming onEnter, so exactly
         // one app's artwork is decoded per selection rather than one per detent.
-        load(s_browseIdx, false, true);
-        diag::log("enter %s", s_apps[s_cur].name);
+        //
+        // Kevin's Orb: a different app arrives through the warp, which calls load() at its
+        // midpoint while the dial is dark. Choosing the app you are already on just closes
+        // the menu.
+        if (s_browseIdx != s_cur) {
+            warp::start([](int idx) { load(idx, false, true); diag::log("enter %s", s_apps[s_cur].name); },
+                        s_browseIdx);
+        } else {
+            load(s_browseIdx, false, true);
+            diag::log("enter %s", s_apps[s_cur].name);
+        }
     }
 
     // Runs on the LVGL thread; if the switcher has sat idle long enough, drop into the shown app.
@@ -420,6 +430,7 @@ void app_shell::add_active(const char *name,
 }
 
 bool app_shell::pressCurrent() {
+    if (warp::active()) return true;   // Kevin's Orb: the knob waits out the warp
     if (!s_count || !s_apps[s_cur].onPress) return false;
     s_apps[s_cur].onPress();
     return true;
@@ -430,6 +441,7 @@ bool app_shell::captured() { return s_captured; }
 void app_shell::setCaptured(bool on) { s_captured = on; }
 
 void app_shell::turnCurrent(int delta) {
+    if (warp::active()) return;
     if (s_count && s_apps[s_cur].onTurn) s_apps[s_cur].onTurn(delta);
 }
 
@@ -541,7 +553,7 @@ void app_shell::begin() {
 
 // First turn opens the switcher on the current app; further turns cycle apps.
 void app_shell::browseTurn(int delta) {
-    if (!s_count) return;
+    if (!s_count || warp::active()) return;
     if (!s_browsing) {
         s_browsing = true;
         s_browseIdx = s_cur;
@@ -579,6 +591,7 @@ void app_shell::browseTurn(int delta) {
 
 // Push commits the shown app (hides the overlay); if not browsing, it's an app action.
 void app_shell::browsePress() {
+    if (warp::active()) return;
     if (s_browsing) commit_current();       // push commits the shown app
     else            pressCurrent();         // otherwise it's the app's own action
 }
@@ -586,6 +599,7 @@ void app_shell::browsePress() {
 bool app_shell::browsing() { return s_browsing; }
 
 void app_shell::openSwitcher() {
+    if (warp::active()) return;
     s_browseIdx = s_cur;
     if (!s_count) return;
     s_browsing = true;

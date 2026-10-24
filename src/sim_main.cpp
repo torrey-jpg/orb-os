@@ -31,6 +31,7 @@
 #include "theme_audio.h"
 #include "intel_view.h"
 #include "tooth_view.h"   // Kevin's Orb
+#include "warp.h"         // Kevin's Orb
 #include "ticker_view.h"
 #include "ticker.h"
 #include "app_shell.h"
@@ -837,6 +838,10 @@ int main(int argc, char **argv) {
     // turns to #14 and captures it, then pushes to hide the details and captures again.
     const char *toothShot  = (argc >= 3 && strcmp(argv[1], "--toothshot") == 0) ? argv[2] : NULL;
     int toothStep = 0; uint32_t toothAt = 0;
+    // Kevin's Orb: --warpshot <prefix> opens the menu on the Clock, picks the Tooth Explorer
+    // and captures the warp at fixed moments through it.
+    const char *warpShot   = (argc >= 3 && strcmp(argv[1], "--warpshot") == 0) ? argv[2] : NULL;
+    int warpStep = 0; uint32_t warpAt = 0; int warpShotIdx = 0;
     // --newsshot is headless but drives the KNOB, so it needs the full app lineup that only
     // interactive mode registers. It is the one capture that walks the shell rather than
     // putting a single screen up directly.
@@ -2299,6 +2304,33 @@ int main(int argc, char **argv) {
 
         static int newsStep = 0;
         static Uint32 newsAt = 0;
+        if (warpShot) {
+            static const uint32_t at[] = { 60, 200, 330, 430, 520, 650, 800, 1100 };
+            if (warpStep == 0 && now - start > 9000) {
+                app_shell::selectApp(app_shell::APP_CLOCK);
+                warpStep = 1; warpAt = now;
+            } else if (warpStep == 1 && now - warpAt > 600) {
+                app_shell::openSwitcher();
+                app_shell::browseTurn(-1);   // Clock -> (wraps to) Settings
+                app_shell::browseTurn(-1);   // Settings -> Tooth Explorer
+                warpStep = 2; warpAt = now;
+            } else if (warpStep == 2 && now - warpAt > 400) {
+                app_shell::browsePress();   // commit: the warp starts
+                printf("[warpshot] warp active=%d lv=%u\n", warp::active(), (unsigned)lv_tick_get());
+                warpStep = 3; warpAt = now;
+            } else if (warpStep == 3) {
+                if (warpShotIdx < (int)(sizeof at / sizeof at[0]) && now - warpAt >= at[warpShotIdx]) {
+                    char path[300]; snprintf(path, sizeof(path), "%s-%04u.bmp", warpShot, (unsigned)at[warpShotIdx]);
+                    sim_save_frame(path);
+                    printf("[warpshot] %s at sdl+%u lv=%u\n", path, (unsigned)(now - warpAt), (unsigned)lv_tick_get());
+                    ++warpShotIdx;
+                }
+                if (warpShotIdx >= (int)(sizeof at / sizeof at[0])) {
+                    printf("[warpshot] done: app=%s active=%d\n", app_shell::name(), warp::active());
+                    run = false;
+                }
+            }
+        }
         if (toothShot) {
             char path[300];
             if (toothStep == 0 && now - start > 9000) {

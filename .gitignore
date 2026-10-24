@@ -44,3 +44,6 @@ orb_watch.pid
 # contents is ~26 MB of PNG and PCM that would otherwise land in a commit via `git add .`.
 themes/*.orb
 themes/unpacked/
+
+# Python caches (tools/)
+__pycache__/
