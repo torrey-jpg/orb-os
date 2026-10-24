@@ -35,6 +35,10 @@
 // device pretending it never understood them.
 #define APPS_LAUNCH_ONE 1
 
+// Kevin's Orb: boot with "Good morning, Dr. Hollar" (greeting.cpp) instead of the stock
+// "THE ORB" title card. 0 brings Zion's title card back.
+#define KEVIN_GREETING 1
+
 // ---------- Home location ----------
 // A PLACEHOLDER, and deliberately not a place. The device has exactly two location inputs
 // (UX-025): the network it joins, looked up at the end of WiFi setup and retried on any

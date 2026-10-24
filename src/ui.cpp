@@ -25,6 +25,7 @@ static inline void  heap_caps_free(void *p) { free(p); }
 #include "config.h"
 #include "splash_art.h"       // splash_art_decode() — boot-splash PNG, decoded on demand
 #include "splash_lines.h"     // the three standing lines, and the glass over them
+#include "greeting.h"         // Kevin's Orb: "Good morning, Dr. Hollar" in place of the title card
 #include "text_tokens.h"       // {token} expansion, the same parser the Flight Tracker uses
 #include "curved_text.h"       // the one glyph blitter; there is not a second
 #include "theme_font.h"        // font_weather1..4.bin, when a theme ships them
@@ -1101,6 +1102,13 @@ static void splash_dismiss_cb(lv_timer_t *t) {
 }
 
 void ui_splash_show(void) {
+#if KEVIN_GREETING
+    // Kevin's Orb: the greeting replaces the title card. It warps into the screen underneath
+    // when it is done and deletes itself; the callback drops our pointer at that moment.
+    s_splashCont = greeting::show([]() { s_splashCont = nullptr; s_splashStatus = nullptr; });
+    lv_refr_now(NULL);   // same reason as below: get it on the panel before setup() blocks
+    return;
+#endif
     lv_obj_t *cont = lv_obj_create(lv_layer_top());
     s_splashCont = cont;
     lv_obj_remove_style_all(cont);

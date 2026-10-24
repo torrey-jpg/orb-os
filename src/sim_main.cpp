@@ -842,6 +842,9 @@ int main(int argc, char **argv) {
     // and captures the warp at fixed moments through it.
     const char *warpShot   = (argc >= 3 && strcmp(argv[1], "--warpshot") == 0) ? argv[2] : NULL;
     int warpStep = 0; uint32_t warpAt = 0; int warpShotIdx = 0;
+    // Kevin's Orb: --greetshot <prefix> photographs the startup greeting as it plays.
+    const char *greetShot  = (argc >= 3 && strcmp(argv[1], "--greetshot") == 0) ? argv[2] : NULL;
+    int greetIdx = 0;
     // --newsshot is headless but drives the KNOB, so it needs the full app lineup that only
     // interactive mode registers. It is the one capture that walks the shell rather than
     // putting a single screen up directly.
@@ -2304,6 +2307,15 @@ int main(int argc, char **argv) {
 
         static int newsStep = 0;
         static Uint32 newsAt = 0;
+        if (greetShot) {
+            static const uint32_t at[] = { 250, 700, 1250, 1900, 2800, 3500, 3750, 4400 };
+            if (greetIdx < (int)(sizeof at / sizeof at[0]) && now - start >= at[greetIdx]) {
+                char path[300]; snprintf(path, sizeof(path), "%s-%04u.bmp", greetShot, (unsigned)at[greetIdx]);
+                sim_save_frame(path);
+                ++greetIdx;
+            }
+            if (greetIdx >= (int)(sizeof at / sizeof at[0])) run = false;
+        }
         if (warpShot) {
             static const uint32_t at[] = { 60, 200, 330, 430, 520, 650, 800, 1100 };
             if (warpStep == 0 && now - start > 9000) {
