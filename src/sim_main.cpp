@@ -32,6 +32,7 @@
 #include "intel_view.h"
 #include "tooth_view.h"   // Kevin's Orb
 #include "warp.h"         // Kevin's Orb
+#include "screensaver.h"  // Kevin's Orb
 #include "ticker_view.h"
 #include "ticker.h"
 #include "app_shell.h"
@@ -703,6 +704,7 @@ static void sim_register_apps(lv_obj_t *radarScreen) {
                    settingsview::onPress, settingsview::onTurn, true, settingsview::onEnter, settingsview::onExit, false);
     app_shell::verifySlots(settingsview::screen());   // same check the device runs, same reason
     app_shell::begin();   // start on Clock (index 0), matching the device
+    screensaver::begin(); // Kevin's Orb, matching main.cpp
 }
 
 // ---- restart: emulate a hardware reboot (holding the encoder's Select for 8s) -----
@@ -845,6 +847,10 @@ int main(int argc, char **argv) {
     // Kevin's Orb: --greetshot <prefix> photographs the startup greeting as it plays.
     const char *greetShot  = (argc >= 3 && strcmp(argv[1], "--greetshot") == 0) ? argv[2] : NULL;
     int greetIdx = 0;
+    // Kevin's Orb: --savershot <prefix>: run with SIM_SAVER_MS small; captures the screensaver
+    // three times, then pushes the knob and captures the screen it wakes back to.
+    const char *saverShot  = (argc >= 3 && strcmp(argv[1], "--savershot") == 0) ? argv[2] : NULL;
+    int saverStep = 0; uint32_t saverAt = 0;
     // --newsshot is headless but drives the KNOB, so it needs the full app lineup that only
     // interactive mode registers. It is the one capture that walks the shell rather than
     // putting a single screen up directly.
@@ -2307,6 +2313,25 @@ int main(int argc, char **argv) {
 
         static int newsStep = 0;
         static Uint32 newsAt = 0;
+        if (saverShot) {
+            char path[300];
+            if (saverStep == 0 && now - start > 9000) {
+                app_shell::selectApp(app_shell::APP_TOOTH);
+                saverStep = 1; saverAt = now;
+            } else if (saverStep >= 1 && saverStep <= 3 && screensaver::showing() && now - saverAt > 1200) {
+                snprintf(path, sizeof(path), "%s-%d.bmp", saverShot, saverStep); sim_save_frame(path);
+                ++saverStep; saverAt = now;
+            } else if (saverStep == 4) {
+                const int before = toothview::current();
+                input_router::dispatch(1, false);      // a turn: should only wake it
+                printf("[savershot] showing=%d tooth %d -> %d (expect unchanged)\n",
+                       screensaver::showing(), before, toothview::current());
+                saverStep = 5; saverAt = now;
+            } else if (saverStep == 5 && now - saverAt > 900) {
+                snprintf(path, sizeof(path), "%s-woke.bmp", saverShot); sim_save_frame(path);
+                run = false;
+            }
+        }
         if (greetShot) {
             static const uint32_t at[] = { 250, 700, 1250, 1900, 2800, 3500, 3750, 4400 };
             if (greetIdx < (int)(sizeof at / sizeof at[0]) && now - start >= at[greetIdx]) {

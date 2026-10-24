@@ -60,6 +60,7 @@
 #include "spycam_view.h"             // Spy Cam: looping "security camera" flip-book
 #include "intel_view.h"
 #include "tooth_view.h"   // Kevin's Orb
+#include "screensaver.h"  // Kevin's Orb
 #include "ticker_view.h"
 #include "ticker.h"              // world headlines, read through the gateway
 #include <set>                       // audio: track which contacts are in range
@@ -2982,6 +2983,7 @@ void setup() {
     // comparison, so the check that caught two silent slot reorders is undiminished.
     app_shell::verifySlots(nullptr, settingsview::build);
     app_shell::begin();                // start on the clock (index 0 — see comment above)
+    screensaver::begin();              // Kevin's Orb: hologram tooth after 10 idle minutes
     psram_mark("after app_shell::begin");
 
     // Fresh out of the box, or right after Settings > Reset: skip the clock and walk

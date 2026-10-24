@@ -1,28 +1,19 @@
 // Kevin's Orb — Tooth Explorer. See tooth_view.h.
 #include "tooth_view.h"
 #include "tooth_data.h"
-#include "theme_sd.h"
+#include "tooth_frames.h"
 #ifdef ARDUINO
-#include <Arduino.h>
-#include <SD.h>
 #include <esp_heap_caps.h>
-#include "sdcard.h"
 #else
-#include <cstdarg>
-#include <cstdio>
 #include <cstdlib>
-static struct { void printf(const char *fmt, ...) const { va_list a; va_start(a, fmt); vprintf(fmt, a); va_end(a); } } Serial;
 static void *heap_caps_malloc(size_t sz, int) { return malloc(sz); }
 static void heap_caps_free(void *p) { free(p); }
 #define MALLOC_CAP_SPIRAM 0
 #define MALLOC_CAP_8BIT 0
 #endif
-#include <PNGdec.h>
 #include <math.h>
-#include <new>
 #include <stdio.h>
 #include <string.h>
-#include <string>
 
 namespace {
 
@@ -50,15 +41,6 @@ const uint32_t SPIN_RESUME   = 2500;  // auto-spin waits this long after a drag
 const uint32_t LOAD_SETTLE   = 220;   // load a tooth's frames once the knob rests this long
 const int      DRAG_PX       = 12;    // finger travel per step of rotation (15 degrees)
 
-// ---- the frame file: /teeth/tNN.bin, written by tools/teeth/render_teeth.py ------------
-//   "TTH2" u16 yaw_count u16 pitch_count u16 w u16 h,
-//   then yaw_count*pitch_count x (u32 offset, u32 length), frame = pitch*yaw_count + yaw,
-//   then the PNGs. ~5-7 MB per tooth: too big to hold, so the table is read once when the
-//   tooth changes and then only the one picture on screen is read from the card.
-const char  *SHEET_DIR    = "/teeth";
-const int    MAX_FRAMES   = 48 * 48;
-const uint32_t MAX_FRAME_BYTES = 256 * 1024;
-
 // ---- state -----------------------------------------------------------------------------
 // s_num, s_details and s_yaw survive destroy(), so coming back lands where Kevin left off.
 int  s_num     = 1;
@@ -77,27 +59,12 @@ lv_obj_t *s_cardText = nullptr;
 lv_obj_t *s_dots[TEETH] = {};
 lv_timer_t *s_timer  = nullptr;
 
-#ifdef ARDUINO
-File         s_file;
-#else
-FILE        *s_file      = nullptr;
-#endif
-bool         s_sheet     = false;     // a tooth's file is open and its table read
-int          s_sheetType = -1;
-int          s_frames    = 0;
-int          s_nyaw = 0, s_npitch = 0;
-uint32_t    *s_table     = nullptr;   // (offset, length) per frame
-uint8_t     *s_comp      = nullptr;   // one compressed frame
-uint32_t     s_compCap   = 0;
-int          s_fw = 0, s_fh = 0;
+ToothFrames  s_tf;                     // the current tooth's pictures on the card
 
 uint16_t    *s_pix       = nullptr;   // decoded frame shown on screen (RGB565)
 lv_img_dsc_t s_dsc;
 int          s_shownFrame = -1;
 bool         s_shownFlip  = false;
-
-PNG         *s_png      = nullptr;
-bool         s_flipNow  = false;      // decode target settings for the line callback
 
 int          s_wantType  = -1;        // type the screen is waiting to load
 uint32_t     s_lastTurn  = 0;
@@ -153,131 +120,27 @@ lv_obj_t *make_label(lv_obj_t *parent, const lv_font_t *font, uint32_t color, in
 // mirror image, so they are the same frames flipped left-to-right.
 bool mirrored(int num) { return num >= 9 && num <= 24; }
 
-void close_file() {
-#ifdef ARDUINO
-    if (s_file) { theme_sd::lock(); s_file.close(); theme_sd::unlock(); }
-#else
-    if (s_file) { fclose(s_file); s_file = nullptr; }
-#endif
-}
-
-// Read `len` bytes at `off` of the open tooth file.
-bool read_at(uint32_t off, uint8_t *dst, uint32_t len) {
-#ifdef ARDUINO
-    if (!s_file) return false;
-    theme_sd::lock();
-    const bool ok = s_file.seek(off) && s_file.read(dst, len) == len;
-    theme_sd::unlock();
-    return ok;
-#else
-    if (!s_file) return false;
-    return fseek(s_file, (long)off, SEEK_SET) == 0 && fread(dst, 1, len, s_file) == len;
-#endif
-}
-
-void free_sheet() {
-    close_file();
-    if (s_table) { heap_caps_free(s_table); s_table = nullptr; }
-    if (s_comp)  { heap_caps_free(s_comp);  s_comp = nullptr; s_compCap = 0; }
-    s_sheet = false; s_sheetType = -1; s_frames = 0; s_nyaw = s_npitch = 0;
-}
-
 void free_frame() {
     if (s_img) lv_img_set_src(s_img, nullptr);
     if (s_pix) { heap_caps_free(s_pix); s_pix = nullptr; }
     s_shownFrame = -1;
 }
 
-void free_decoder() {
-    if (s_png) { s_png->~PNG(); heap_caps_free(s_png); s_png = nullptr; }
-}
-
-uint16_t rd16(const uint8_t *p) { return (uint16_t)(p[0] | (p[1] << 8)); }
-uint32_t rd32(const uint8_t *p) { return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24); }
-
-bool load_sheet(int type) {
-    if (type == s_sheetType && s_sheet) return true;
-    free_sheet();
-    char path[40];
-    snprintf(path, sizeof path, "%s/t%02d.bin", SHEET_DIR, type);
-#ifdef ARDUINO
-    if (!sdcard::mounted()) { Serial.printf("[tooth] no SD card\n"); return false; }
-    theme_sd::lock();
-    s_file = SD.open(path, "r");
-    theme_sd::unlock();
-    if (!s_file) { Serial.printf("[tooth] %s: not found\n", path); return false; }
-#else
-    s_file = fopen((std::string("sim/sdcard") + path).c_str(), "rb");
-    if (!s_file) { Serial.printf("[tooth] %s: not found\n", path); return false; }
-#endif
-    uint8_t head[12];
-    bool ok = read_at(0, head, sizeof head) && memcmp(head, "TTH2", 4) == 0;
-    const int ny = ok ? rd16(head + 4) : 0, np = ok ? rd16(head + 6) : 0;
-    const int frames = ny * np;
-    ok = ok && ny > 0 && np > 0 && frames <= MAX_FRAMES;
-    if (ok) {
-        s_table = (uint32_t *)heap_caps_malloc((size_t)frames * 8, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-        ok = s_table && read_at(12, (uint8_t *)s_table, (uint32_t)frames * 8);
-    }
-    uint32_t biggest = 0;
-    for (int i = 0; ok && i < frames; ++i) {
-        // The table is little-endian on disk, and so are both targets; rd32 keeps that honest.
-        const uint32_t off = rd32((const uint8_t *)&s_table[i * 2]);
-        const uint32_t len = rd32((const uint8_t *)&s_table[i * 2 + 1]);
-        s_table[i * 2] = off; s_table[i * 2 + 1] = len;
-        ok = len > 0 && len <= MAX_FRAME_BYTES;
-        if (len > biggest) biggest = len;
-    }
-    if (ok) {
-        s_comp = (uint8_t *)heap_caps_malloc(biggest, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-        s_compCap = biggest;
-        ok = s_comp != nullptr;
-    }
-    if (!ok) { Serial.printf("[tooth] %s: bad file\n", path); free_sheet(); return false; }
-    s_sheet = true; s_sheetType = type; s_frames = frames; s_nyaw = ny; s_npitch = np;
-    s_fw = rd16(head + 8); s_fh = rd16(head + 10);
-    Serial.printf("[tooth] %s: %d x %d angles, %dx%d\n", path, ny, np, s_fw, s_fh);
-    return true;
-}
-
-int line_cb(PNGDRAW *draw) {
-    const uint8_t *src = draw->pPixels;
-    const int w = draw->iWidth;
-    const int bpp = (draw->iPixelType == PNG_PIXEL_TRUECOLOR_ALPHA) ? 4 : 3;
-    uint16_t *row = s_pix + (size_t)draw->y * s_fw;
-    for (int x = 0; x < w; ++x, src += bpp) {
-        const uint16_t v = (uint16_t)(((src[0] & 0xF8) << 8) | ((src[1] & 0xFC) << 3) | (src[2] >> 3));
-        row[s_flipNow ? (w - 1 - x) : x] = v;
-    }
-    return 1;
-}
-
 bool show_frame(int frame, bool flip) {
-    if (!s_sheet || !s_img) return false;
+    if (!s_tf.isOpen() || !s_img) return false;
     if (frame == s_shownFrame && flip == s_shownFlip) return true;
-    if (!s_png) {
-        void *mem = heap_caps_malloc(sizeof(PNG), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-        if (!mem) return false;
-        s_png = new (mem) PNG();
-    }
     if (!s_pix) {
-        s_pix = (uint16_t *)heap_caps_malloc((size_t)s_fw * s_fh * 2, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+        const int w = s_tf.width(), h = s_tf.height();
+        s_pix = (uint16_t *)heap_caps_malloc((size_t)w * h * 2, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
         if (!s_pix) return false;
         memset(&s_dsc, 0, sizeof s_dsc);
         s_dsc.header.cf = LV_IMG_CF_TRUE_COLOR;
-        s_dsc.header.w = s_fw;
-        s_dsc.header.h = s_fh;
-        s_dsc.data_size = (uint32_t)s_fw * s_fh * 2;
+        s_dsc.header.w = w;
+        s_dsc.header.h = h;
+        s_dsc.data_size = (uint32_t)w * h * 2;
         s_dsc.data = (const uint8_t *)s_pix;
     }
-    const uint32_t off = s_table[frame * 2], len = s_table[frame * 2 + 1];
-    if (len > s_compCap || !read_at(off, s_comp, len)) return false;
-    if (s_png->openRAM(s_comp, (int)len, line_cb) != PNG_SUCCESS) return false;
-    if (s_png->getWidth() != s_fw || s_png->getHeight() != s_fh) { s_png->close(); return false; }
-    s_flipNow = flip;
-    const int r = s_png->decode(nullptr, 0);
-    s_png->close();
-    if (r != PNG_SUCCESS) return false;
+    if (!s_tf.decode(frame, flip, s_pix)) return false;
     s_shownFrame = frame; s_shownFlip = flip;
     lv_img_cache_invalidate_src(&s_dsc);
     lv_img_set_src(s_img, &s_dsc);
@@ -290,12 +153,9 @@ bool show_frame(int frame, bool flip) {
 // mirrored tooth counts its yaw frames backwards to turn the same way under the finger.
 void draw_tooth() {
     if (!s_screen) return;
-    const int type = tooth_data::typeOf(s_num);
-    if (type != s_sheetType || !s_sheet || s_frames == 0) return;
+    if (!s_tf.isOpen() || s_tf.type() != tooth_data::typeOf(s_num)) return;
     const bool flip = mirrored(s_num);
-    const int y = ((s_yaw % s_nyaw) + s_nyaw) % s_nyaw;
-    const int p = ((s_pitch % s_npitch) + s_npitch) % s_npitch;
-    show_frame(p * s_nyaw + (flip ? (s_nyaw - y) % s_nyaw : y), flip);
+    show_frame(s_tf.frameFor(s_yaw, s_pitch, flip), flip);
 }
 
 void set_image_visible(bool on) {
@@ -323,7 +183,7 @@ void render_text() {
 // rests, so spinning through several teeth does not read every one of them on the way.
 void request_tooth() {
     const int type = tooth_data::typeOf(s_num);
-    if (type == s_sheetType && s_sheet) {
+    if (s_tf.isOpen() && s_tf.type() == type) {
         set_image_visible(true);
         draw_tooth();
         return;
@@ -341,7 +201,7 @@ void tick(lv_timer_t *) {
         const int type = s_wantType;
         s_wantType = -1;
         free_frame();
-        s_missing = !load_sheet(type);
+        s_missing = !s_tf.open(type);
         if (s_missing) {
             lv_obj_clear_flag(s_noimg, LV_OBJ_FLAG_HIDDEN);
         } else {
@@ -349,7 +209,7 @@ void tick(lv_timer_t *) {
             draw_tooth();
         }
     }
-    if (!s_dragging && s_sheet && s_wantType < 0 &&
+    if (!s_dragging && s_tf.isOpen() && s_wantType < 0 &&
         now - s_lastDrag >= SPIN_RESUME && now - s_lastSpin >= SPIN_MS) {
         s_lastSpin = now;
         ++s_yaw;
@@ -388,8 +248,7 @@ void drag_cb(lv_event_t *e) {
 
 void release_art() {
     free_frame();
-    free_sheet();
-    free_decoder();
+    s_tf.close();
 }
 
 }  // namespace
