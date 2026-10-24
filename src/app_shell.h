@@ -96,6 +96,7 @@ namespace app_shell {
 #if !APPS_LAUNCH_ONE
         APP_TICKER,
 #endif
+        APP_TOOTH,      // Kevin's Orb: Tooth Explorer
         APP_SETTINGS,
         APP_COUNT,
     };

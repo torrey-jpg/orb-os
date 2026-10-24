@@ -59,6 +59,7 @@
 #include "custom_apps.h"              // CUSTOM_APP_* — which apps a theme flash includes in the menu
 #include "spycam_view.h"             // Spy Cam: looping "security camera" flip-book
 #include "intel_view.h"
+#include "tooth_view.h"   // Kevin's Orb
 #include "ticker_view.h"
 #include "ticker.h"              // world headlines, read through the gateway
 #include <set>                       // audio: track which contacts are in range
@@ -2945,6 +2946,11 @@ void setup() {
     // measured 2026-10-06 — for the screen reached least often, and internal RAM is the
     // pool that runs out (docs/memory.md). app_shell keeps it resident afterwards under
     // RESIDENT_CACHE, so coming straight back to it costs no rebuild.
+    // Kevin's Orb: Tooth Explorer. Built when first shown, given back when left. A turn
+    // steps the teeth, a push hides the details, a rock opens the menu as everywhere else.
+    app_shell::addLazy("Tooth Explorer", toothview::build, toothview::destroy,
+                       toothview::onPress, toothview::onTurn, false,
+                       toothview::onEnter, toothview::onExit, false);
     app_shell::addLazy(theme_style::names().settings,
                        settingsview::build, settingsview::destroy,
                        settingsview::onPress, settingsview::onTurn,

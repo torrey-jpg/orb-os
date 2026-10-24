@@ -30,6 +30,7 @@
 #include "clock_view.h"
 #include "theme_audio.h"
 #include "intel_view.h"
+#include "tooth_view.h"   // Kevin's Orb
 #include "ticker_view.h"
 #include "ticker.h"
 #include "app_shell.h"
@@ -346,8 +347,17 @@ static void sdl_flush(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *px)
 
 // Mouse acts as the touch input device. In composite mode the screen is the round
 // lens, so map window coords into the round display (only inside the circle).
+// Kevin's Orb: a scripted finger for --toothshot, so a drag can be tested headless.
+static bool g_fakeTouch = false;
+static int  g_fakeX = 0, g_fakeY = 0;
 static void sdl_mouse_read(lv_indev_drv_t *drv, lv_indev_data_t *data) {
     (void)drv;
+    if (g_fakeTouch) {
+        data->point.x = (lv_coord_t)g_fakeX;
+        data->point.y = (lv_coord_t)g_fakeY;
+        data->state = LV_INDEV_STATE_PRESSED;
+        return;
+    }
     int x, y;
     Uint32 btn = SDL_GetMouseState(&x, &y);
     const bool down = (btn & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0;
@@ -684,6 +694,10 @@ static void sim_register_apps(lv_obj_t *radarScreen) {
     // After the Ticker, matching main.cpp. The selftests below address apps by index, so the
     // two lineups have to stay in the same order or the simulator stops standing in for the
     // device at exactly the moment someone is using it to check one.
+    // Kevin's Orb: Tooth Explorer, same slot and same handlers as main.cpp.
+    app_shell::addLazy("Tooth Explorer", toothview::build, toothview::destroy,
+                       toothview::onPress, toothview::onTurn, false,
+                       toothview::onEnter, toothview::onExit, false);
     app_shell::add(settingsview::screen(), theme_style::names().settings,
                    settingsview::onPress, settingsview::onTurn, true, settingsview::onEnter, settingsview::onExit, false);
     app_shell::verifySlots(settingsview::screen());   // same check the device runs, same reason
@@ -819,6 +833,10 @@ int main(int argc, char **argv) {
     // it appears there because rows more than a quarter turn away were CLAMPED onto the top
     // of the dial instead of being dropped, so five of them drew on the same pixel.
     const char *setShot    = (argc >= 3 && strcmp(argv[1], "--settingsshot") == 0) ? argv[2] : NULL;
+    // Kevin's Orb: --toothshot <prefix> opens the Tooth Explorer and captures tooth #1, then
+    // turns to #14 and captures it, then pushes to hide the details and captures again.
+    const char *toothShot  = (argc >= 3 && strcmp(argv[1], "--toothshot") == 0) ? argv[2] : NULL;
+    int toothStep = 0; uint32_t toothAt = 0;
     // --newsshot is headless but drives the KNOB, so it needs the full app lineup that only
     // interactive mode registers. It is the one capture that walks the shell rather than
     // putting a single screen up directly.
@@ -2281,6 +2299,37 @@ int main(int argc, char **argv) {
 
         static int newsStep = 0;
         static Uint32 newsAt = 0;
+        if (toothShot) {
+            char path[300];
+            if (toothStep == 0 && now - start > 9000) {
+                app_shell::selectApp(app_shell::APP_TOOTH);
+                printf("[toothshot] idx=%d name=%s\n", app_shell::index(), app_shell::name());
+                toothStep = 1; toothAt = now;
+            } else if (toothStep == 1 && now - toothAt > 900) {
+                printf("[toothshot] tooth=%d frame=%d\n", toothview::current(), toothview::frame());
+                snprintf(path, sizeof(path), "%s-01.bmp", toothShot); sim_save_frame(path);
+                for (int i = 0; i < 13; ++i) input_router::dispatch(1, false);
+                toothStep = 2; toothAt = now;
+            } else if (toothStep == 2 && now - toothAt > 900) {
+                printf("[toothshot] tooth=%d (expect 14) frame=%d\n", toothview::current(), toothview::frame());
+                snprintf(path, sizeof(path), "%s-14.bmp", toothShot); sim_save_frame(path);
+                g_fakeTouch = true; g_fakeX = 150; g_fakeY = 240;       // finger down
+                toothStep = 3; toothAt = now;
+            } else if (toothStep == 3) {
+                if (g_fakeX < 330) g_fakeX += 3;                         // drag right...
+                else if (g_fakeY < 330) g_fakeY += 3;                    // ...then down
+                else if (now - toothAt > 300) {
+                    g_fakeTouch = false;                                 // finger up
+                    printf("[toothshot] after drag frame=%d\n", toothview::frame());
+                    snprintf(path, sizeof(path), "%s-14-drag.bmp", toothShot); sim_save_frame(path);
+                    input_router::dispatch(0, true);                     // push: fact card
+                    toothStep = 4; toothAt = now;
+                }
+            } else if (toothStep == 4 && now - toothAt > 400) {
+                snprintf(path, sizeof(path), "%s-14-fact.bmp", toothShot); sim_save_frame(path);
+                run = false;
+            }
+        }
         if (newsShot) {
             if (newsStep == 0 && now - start > 2500) {
                 app_shell::selectApp(app_shell::APP_INTEL);
