@@ -1,6 +1,7 @@
 // Kevin's Orb — the hologram screensaver. See screensaver.h.
 #include "screensaver.h"
 #include "app_shell.h"
+#include "daily_card.h"
 #include "orb_time.h"
 #include "tooth_data.h"
 #include "tooth_frames.h"
@@ -21,8 +22,11 @@ static void heap_caps_free(void *p) { free(p); }
 
 namespace {
 
-const uint32_t COL_MINT  = 0x5FE3C0;
-const uint32_t COL_TIME  = 0xB8C8C4;
+// Accent: sky blue, chosen for Dr. Hollar's red/green colour blindness. Blue stays blue
+// to a red/green colour-blind eye; the mint this replaced looks almost white to one
+// (simulated, Machado 2009), so it could not be told apart from the white text.
+const uint32_t COL_ACCENT  = 0x5BC0FF;
+const uint32_t COL_TIME  = 0xC8CCD2;
 
 const uint32_t CHECK_MS   = 500;     // how often the idle clock is looked at
 const uint32_t FRAME_MS   = 40;      // animation tick
@@ -152,7 +156,10 @@ void anim(lv_timer_t *) {
 }
 
 void touch_cb(lv_event_t *e) {
-    if (lv_event_get_code(e) == LV_EVENT_PRESSED) hide();
+    if (lv_event_get_code(e) == LV_EVENT_PRESSED) {
+        hide();
+        daily_card::maybeShow();   // a touch that wakes it can be the first touch of the day
+    }
 }
 
 void show() {
@@ -183,8 +190,8 @@ void show() {
     lv_obj_set_size(s_emitter, 170, 22);
     lv_obj_align(s_emitter, LV_ALIGN_TOP_MID, 0, IMG_Y + 214);
     lv_obj_set_style_radius(s_emitter, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_bg_color(s_emitter, lv_color_hex(COL_MINT), 0);
-    lv_obj_set_style_shadow_color(s_emitter, lv_color_hex(COL_MINT), 0);
+    lv_obj_set_style_bg_color(s_emitter, lv_color_hex(COL_ACCENT), 0);
+    lv_obj_set_style_shadow_color(s_emitter, lv_color_hex(COL_ACCENT), 0);
     lv_obj_set_style_shadow_width(s_emitter, 40, 0);
     lv_obj_set_style_shadow_spread(s_emitter, 4, 0);
     lv_obj_clear_flag(s_emitter, LV_OBJ_FLAG_CLICKABLE);
@@ -197,14 +204,14 @@ void show() {
     lv_obj_remove_style_all(s_scan);
     lv_obj_set_size(s_scan, 240, 10);
     lv_obj_align(s_scan, LV_ALIGN_TOP_MID, 0, IMG_Y);
-    lv_obj_set_style_bg_color(s_scan, lv_color_hex(COL_MINT), 0);
+    lv_obj_set_style_bg_color(s_scan, lv_color_hex(COL_ACCENT), 0);
     lv_obj_set_style_bg_opa(s_scan, LV_OPA_20, 0);
     lv_obj_set_style_radius(s_scan, 5, 0);
     lv_obj_clear_flag(s_scan, LV_OBJ_FLAG_CLICKABLE);
 
     s_label = lv_label_create(s_body);
     lv_obj_set_style_text_font(s_label, &lv_font_montserrat_14, 0);
-    lv_obj_set_style_text_color(s_label, lv_color_hex(COL_MINT), 0);
+    lv_obj_set_style_text_color(s_label, lv_color_hex(COL_ACCENT), 0);
     lv_obj_set_style_text_letter_space(s_label, 3, 0);
     lv_obj_align(s_label, LV_ALIGN_TOP_MID, 0, IMG_Y + 250);
 

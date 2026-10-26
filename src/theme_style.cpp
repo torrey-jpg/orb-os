@@ -79,6 +79,7 @@ void seed_defaults() {
     s_clock.plateFollow = 0;      // static plate unless the theme says otherwise
     s_clock.tickRate    = 1;      // one tick a second unless the recording beat faster
     s_clock.bgAnim = theme_style::Clock::BgAnim{};   // a still plate unless the theme ships frames
+    s_clock.dateWheel = theme_style::Clock::DateWheel{};   // Kevin's Orb: no date window unless the theme asks
 #if CUSTOM_HAS_TEXT1
     s_clock.text1.show = true;
     s_clock.text1.x = CUSTOM_TEXT1_X;
@@ -485,6 +486,21 @@ void load() {
             if (doc["windCrankPY"].is<int>())        s_clock.windCrankPY   = doc["windCrankPY"].as<int>();
             if (doc["windCrankRest"].is<int>())      s_clock.windCrankRest = doc["windCrankRest"].as<int>();
             if (doc["secondSweep"].is<bool>())       s_clock.secondSweep = doc["secondSweep"].as<bool>();
+            // Kevin's Orb: the date wheels. Clamped to the dial so a bad file cannot draw
+            // off the edge of the buffer.
+            if (doc["dateWheel"].is<JsonObjectConst>()) {
+                JsonObjectConst dw = doc["dateWheel"].as<JsonObjectConst>();
+                theme_style::Clock::DateWheel &w = s_clock.dateWheel;
+                w.show = dw["show"] | false;
+                w.monX = clampi(dw["monX"] | 0, 40, 425); w.monY = clampi(dw["monY"] | 0, 40, 425);
+                w.dayX = clampi(dw["dayX"] | 0, 40, 425); w.dayY = clampi(dw["dayY"] | 0, 40, 425);
+                w.monW = clampi(dw["monW"] | 0, 0, 80);   w.dayW = clampi(dw["dayW"] | 0, 0, 80);
+                w.h    = clampi(dw["h"] | 0, 0, 40);
+                w.arcCX = clampi(dw["arcCX"] | 0, -500, 1000); w.arcCY = clampi(dw["arcCY"] | 0, -500, 1000);
+                w.arcR  = clampi(dw["arcR"] | 0, 0, 1000);
+                if (dw["wheel"].is<uint32_t>()) w.wheel = dw["wheel"].as<uint32_t>();
+                if (dw["ink"].is<uint32_t>())   w.ink   = dw["ink"].as<uint32_t>();
+            }
             if (doc["secondRailway"].is<bool>())     s_clock.secondRailway = doc["secondRailway"].as<bool>();
             if (doc["windTitleOpa"].is<int>())       s_clock.windTitleOpa  = doc["windTitleOpa"].as<int>();
             if (doc["windAskOpa"].is<int>())         s_clock.windAskOpa    = doc["windAskOpa"].as<int>();

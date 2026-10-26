@@ -61,6 +61,8 @@
 #include "intel_view.h"
 #include "tooth_view.h"   // Kevin's Orb
 #include "screensaver.h"  // Kevin's Orb
+#include "fact_view.h"    // Kevin's Orb
+#include "daily_card.h"   // Kevin's Orb
 #include "ticker_view.h"
 #include "ticker.h"              // world headlines, read through the gateway
 #include <set>                       // audio: track which contacts are in range
@@ -2952,6 +2954,10 @@ void setup() {
     app_shell::addLazy("Tooth Explorer", toothview::build, toothview::destroy,
                        toothview::onPress, toothview::onTurn, false,
                        toothview::onEnter, toothview::onExit, false);
+    // Kevin's Orb: Dental Fact of the Day. A turn steps through days, a push returns to today.
+    app_shell::addLazy("Dental Fact", factview::build, factview::destroy,
+                       factview::onPress, factview::onTurn, false,
+                       factview::onEnter, factview::onExit, false);
     app_shell::addLazy(theme_style::names().settings,
                        settingsview::build, settingsview::destroy,
                        settingsview::onPress, settingsview::onTurn,
@@ -2984,6 +2990,7 @@ void setup() {
     app_shell::verifySlots(nullptr, settingsview::build);
     app_shell::begin();                // start on the clock (index 0 — see comment above)
     screensaver::begin();              // Kevin's Orb: hologram tooth after 10 idle minutes
+    daily_card::begin();               // Kevin's Orb: fact and joke on the first touch of the day
     psram_mark("after app_shell::begin");
 
     // Fresh out of the box, or right after Settings > Reset: skip the clock and walk

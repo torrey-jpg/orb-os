@@ -33,6 +33,8 @@
 #include "tooth_view.h"   // Kevin's Orb
 #include "warp.h"         // Kevin's Orb
 #include "screensaver.h"  // Kevin's Orb
+#include "fact_view.h"    // Kevin's Orb
+#include "daily_card.h"   // Kevin's Orb
 #include "ticker_view.h"
 #include "ticker.h"
 #include "app_shell.h"
@@ -700,11 +702,15 @@ static void sim_register_apps(lv_obj_t *radarScreen) {
     app_shell::addLazy("Tooth Explorer", toothview::build, toothview::destroy,
                        toothview::onPress, toothview::onTurn, false,
                        toothview::onEnter, toothview::onExit, false);
+    app_shell::addLazy("Dental Fact", factview::build, factview::destroy,
+                       factview::onPress, factview::onTurn, false,
+                       factview::onEnter, factview::onExit, false);
     app_shell::add(settingsview::screen(), theme_style::names().settings,
                    settingsview::onPress, settingsview::onTurn, true, settingsview::onEnter, settingsview::onExit, false);
     app_shell::verifySlots(settingsview::screen());   // same check the device runs, same reason
     app_shell::begin();   // start on Clock (index 0), matching the device
     screensaver::begin(); // Kevin's Orb, matching main.cpp
+    daily_card::begin();  // Kevin's Orb, matching main.cpp
 }
 
 // ---- restart: emulate a hardware reboot (holding the encoder's Select for 8s) -----
@@ -851,6 +857,20 @@ int main(int argc, char **argv) {
     // three times, then pushes the knob and captures the screen it wakes back to.
     const char *saverShot  = (argc >= 3 && strcmp(argv[1], "--savershot") == 0) ? argv[2] : NULL;
     int saverStep = 0; uint32_t saverAt = 0;
+    // Kevin's Orb: --clockshot <file.bmp> photographs the Clock once it has settled.
+    const char *clockShot  = (argc >= 3 && strcmp(argv[1], "--clockshot") == 0) ? argv[2] : NULL;
+    int clockStep = 0; uint32_t clockAt = 0;
+    // Kevin's Orb: --rollshot <prefix> (with SIM_DATE_ROLL=1) photographs the date wheels
+    // rolling over at the simulated midnight.
+    const char *rollShot   = (argc >= 3 && strcmp(argv[1], "--rollshot") == 0) ? argv[2] : NULL;
+    int rollIdx = 0;
+    // Kevin's Orb: --factshot <prefix> shows today's fact, then two days back, then today again.
+    const char *factShot   = (argc >= 3 && strcmp(argv[1], "--factshot") == 0) ? argv[2] : NULL;
+    int factStep = 0; uint32_t factAt = 0;
+    // Kevin's Orb: --dailyshot <prefix> (with SIM_DAILY=1): first touch -> fact card, push ->
+    // joke setup, wait -> punchline, push -> closed, capturing each.
+    const char *dailyShot  = (argc >= 3 && strcmp(argv[1], "--dailyshot") == 0) ? argv[2] : NULL;
+    int dailyStep = 0; uint32_t dailyAt = 0;
     // --newsshot is headless but drives the KNOB, so it needs the full app lineup that only
     // interactive mode registers. It is the one capture that walks the shell rather than
     // putting a single screen up directly.
@@ -2313,6 +2333,71 @@ int main(int argc, char **argv) {
 
         static int newsStep = 0;
         static Uint32 newsAt = 0;
+        if (dailyShot) {
+            char path[300];
+            if (dailyStep == 0 && now - start > 9000) {
+                app_shell::selectApp(app_shell::APP_CLOCK);
+                dailyStep = 1; dailyAt = now;
+            } else if (dailyStep == 1 && now - dailyAt > 800) {
+                input_router::dispatch(1, false);                 // first touch of the day
+                printf("[dailyshot] card showing=%d app=%s\n", daily_card::showing(), app_shell::name());
+                dailyStep = 2; dailyAt = now;
+            } else if (dailyStep == 2 && now - dailyAt > 500) {
+                snprintf(path, sizeof(path), "%s-fact.bmp", dailyShot); sim_save_frame(path);
+                input_router::dispatch(0, true);                  // -> joke
+                dailyStep = 3; dailyAt = now;
+            } else if (dailyStep == 3 && now - dailyAt > 500) {
+                snprintf(path, sizeof(path), "%s-setup.bmp", dailyShot); sim_save_frame(path);
+                dailyStep = 4; dailyAt = now;
+            } else if (dailyStep == 4 && now - dailyAt > 2800) {
+                snprintf(path, sizeof(path), "%s-punch.bmp", dailyShot); sim_save_frame(path);
+                input_router::dispatch(0, true);                  // close
+                printf("[dailyshot] after close showing=%d app=%s\n", daily_card::showing(), app_shell::name());
+                input_router::dispatch(1, false);                 // a second touch: no card again today
+                printf("[dailyshot] second touch showing=%d\n", daily_card::showing());
+                run = false;
+            }
+        }
+        if (factShot) {
+            char path[300];
+            if (factStep == 0 && now - start > 9000) {
+                app_shell::selectApp(app_shell::APP_FACTS);
+                factStep = 1; factAt = now;
+            } else if (factStep == 1 && now - factAt > 600) {
+                printf("[factshot] app=%s fact=%d\n", app_shell::name(), factview::index() + 1);
+                snprintf(path, sizeof(path), "%s-today.bmp", factShot); sim_save_frame(path);
+                input_router::dispatch(-1, false); input_router::dispatch(-1, false);
+                factStep = 2; factAt = now;
+            } else if (factStep == 2 && now - factAt > 600) {
+                printf("[factshot] two days back: fact=%d\n", factview::index() + 1);
+                snprintf(path, sizeof(path), "%s-back2.bmp", factShot); sim_save_frame(path);
+                input_router::dispatch(0, true);
+                factStep = 3; factAt = now;
+            } else if (factStep == 3 && now - factAt > 600) {
+                printf("[factshot] after push: fact=%d\n", factview::index() + 1);
+                run = false;
+            }
+        }
+        if (rollShot) {
+            static const uint32_t at[] = { 9950, 10300, 10650, 11000, 11700 };
+            if (rollIdx == 0 && now - start > 8000 && app_shell::index() != app_shell::APP_CLOCK)
+                app_shell::selectApp(app_shell::APP_CLOCK);
+            if (rollIdx < 5 && lv_tick_get() >= at[rollIdx]) {
+                char path[300]; snprintf(path, sizeof(path), "%s-%d.bmp", rollShot, rollIdx);
+                sim_save_frame(path);
+                ++rollIdx;
+            }
+            if (rollIdx >= 5) run = false;
+        }
+        if (clockShot) {
+            if (clockStep == 0 && now - start > 9000) {
+                app_shell::selectApp(app_shell::APP_CLOCK);
+                clockStep = 1; clockAt = now;
+            } else if (clockStep == 1 && now - clockAt > 1500) {
+                sim_save_frame(clockShot);
+                run = false;
+            }
+        }
         if (saverShot) {
             char path[300];
             if (saverStep == 0 && now - start > 9000) {

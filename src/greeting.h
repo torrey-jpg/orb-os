@@ -7,9 +7,9 @@
 //   "GOOD MORNING" / "GOOD AFTERNOON" / "GOOD EVENING" types on, then "Dr. Hollar",
 //   then the date, holds, and warps (warp.h) into whatever screen is underneath.
 //
-// Kevin's photo sits above the text when /greeting/photo.png is on the SD card (a round
-// PNG with a transparent outside, up to 240 px; tools/greeting/make_photo.py makes one from
-// any picture). It is kept on the card, not in the code, so it never reaches GitHub.
+// A photo sits above the text when /greeting/photo.png is on the SD card: a round portrait
+// (150 x 150) or a wide group shot (290 x 131), PNG with a transparent outside;
+// tools/greeting/make_photo.py makes either from any picture. It is kept on the card, not in the code, so it never reaches GitHub.
 //
 // The greeting follows the Orb's clock. If the clock has not been set yet it says
 // "WELCOME" instead of guessing the time of day.

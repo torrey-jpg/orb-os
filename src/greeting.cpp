@@ -22,9 +22,12 @@ namespace {
 
 // ---- look --------------------------------------------------------------------------------
 const uint32_t COL_ENAMEL = 0xF4F1E8;
-const uint32_t COL_MINT   = 0x5FE3C0;
-const uint32_t COL_GREY   = 0x8A9A9A;
-const uint32_t COL_HINT   = 0x4A5A58;
+// Accent: sky blue, chosen for Dr. Hollar's red/green colour blindness. Blue stays blue
+// to a red/green colour-blind eye; the mint this replaced looks almost white to one
+// (simulated, Machado 2009), so it could not be told apart from the white text.
+const uint32_t COL_ACCENT   = 0x5BC0FF;
+const uint32_t COL_GREY   = 0x9A9A9A;
+const uint32_t COL_HINT   = 0x5C5C5C;
 
 // ---- timeline (ms from the first frame) --------------------------------------------------
 const uint32_t T_SCAN_END   = 600;    // scan line top -> bottom
@@ -130,7 +133,7 @@ bool load_photo() {
         PNG *png = new (mem) PNG();
         if (png->openRAM(file, (int)len, photo_line) == PNG_SUCCESS) {
             const int w = png->getWidth(), h = png->getHeight();
-            if (w > 0 && h > 0 && w <= 240 && h <= 240) {
+            if (w > 0 && h > 0 && w <= 340 && h <= 180) {
                 s_photoBuf = (uint8_t *)heap_caps_malloc((size_t)w * h * 3, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
                 if (s_photoBuf) {
                     s_photoW = w;
@@ -246,7 +249,7 @@ lv_obj_t *greeting::show(void (*gone)()) {
     lv_obj_center(s_ring);
     lv_arc_set_bg_angles(s_ring, 0, 0);
     lv_arc_set_angles(s_ring, 270, 270);
-    lv_obj_set_style_arc_color(s_ring, lv_color_hex(COL_MINT), LV_PART_INDICATOR);
+    lv_obj_set_style_arc_color(s_ring, lv_color_hex(COL_ACCENT), LV_PART_INDICATOR);
     lv_obj_set_style_arc_width(s_ring, 3, LV_PART_INDICATOR);
     lv_obj_set_style_arc_opa(s_ring, LV_OPA_80, LV_PART_INDICATOR);
     lv_obj_set_style_arc_rounded(s_ring, true, LV_PART_INDICATOR);
@@ -254,24 +257,25 @@ lv_obj_t *greeting::show(void (*gone)()) {
 
     // With a photo: photo at the top, text below it. Without: the text sits in the middle.
     const bool photo = load_photo();
-    const int yLine1 = photo ? 226 : 150;
+    const int yLine1 = photo ? 248 : 150;
     if (photo) {
-        const int d = s_photoDsc.header.w;
+        // Square photos are round portraits; wide ones are group shots in a rounded frame.
+        const int w = s_photoDsc.header.w, h = s_photoDsc.header.h;
         s_photoRing = lv_obj_create(s_cont);
         lv_obj_remove_style_all(s_photoRing);
-        lv_obj_set_size(s_photoRing, d + 10, d + 10);
-        lv_obj_align(s_photoRing, LV_ALIGN_TOP_MID, 0, 205 - d - 5);
-        lv_obj_set_style_radius(s_photoRing, LV_RADIUS_CIRCLE, 0);
-        lv_obj_set_style_border_color(s_photoRing, lv_color_hex(COL_MINT), 0);
+        lv_obj_set_size(s_photoRing, w + 10, h + 10);
+        lv_obj_align(s_photoRing, LV_ALIGN_TOP_MID, 0, 230 - h - 5);
+        lv_obj_set_style_radius(s_photoRing, w == h ? LV_RADIUS_CIRCLE : 22, 0);
+        lv_obj_set_style_border_color(s_photoRing, lv_color_hex(COL_ACCENT), 0);
         lv_obj_set_style_border_width(s_photoRing, 2, 0);
         lv_obj_set_style_border_opa(s_photoRing, LV_OPA_TRANSP, 0);
         s_photo = lv_img_create(s_cont);
         lv_img_set_src(s_photo, &s_photoDsc);
-        lv_obj_align(s_photo, LV_ALIGN_TOP_MID, 0, 205 - d);
+        lv_obj_align(s_photo, LV_ALIGN_TOP_MID, 0, 230 - h);
         lv_obj_set_style_img_opa(s_photo, LV_OPA_TRANSP, 0);
     }
 
-    s_line1 = make_label(&lv_font_montserrat_18, COL_MINT, yLine1);
+    s_line1 = make_label(&lv_font_montserrat_18, COL_ACCENT, yLine1);
     lv_obj_set_style_text_letter_space(s_line1, 4, 0);
 
     s_name = make_label(&lv_font_montserrat_44, COL_ENAMEL, yLine1 + 30);
@@ -279,7 +283,7 @@ lv_obj_t *greeting::show(void (*gone)()) {
     s_cursor = lv_obj_create(s_cont);
     lv_obj_remove_style_all(s_cursor);
     lv_obj_set_size(s_cursor, 4, 40);
-    lv_obj_set_style_bg_color(s_cursor, lv_color_hex(COL_MINT), 0);
+    lv_obj_set_style_bg_color(s_cursor, lv_color_hex(COL_ACCENT), 0);
     lv_obj_set_style_bg_opa(s_cursor, LV_OPA_COVER, 0);
     lv_obj_add_flag(s_cursor, LV_OBJ_FLAG_HIDDEN);
 
@@ -296,9 +300,9 @@ lv_obj_t *greeting::show(void (*gone)()) {
     lv_obj_remove_style_all(s_scan);
     lv_obj_set_size(s_scan, 466, 3);
     lv_obj_set_pos(s_scan, 0, 0);
-    lv_obj_set_style_bg_color(s_scan, lv_color_hex(COL_MINT), 0);
+    lv_obj_set_style_bg_color(s_scan, lv_color_hex(COL_ACCENT), 0);
     lv_obj_set_style_bg_opa(s_scan, LV_OPA_COVER, 0);
-    lv_obj_set_style_shadow_color(s_scan, lv_color_hex(COL_MINT), 0);
+    lv_obj_set_style_shadow_color(s_scan, lv_color_hex(COL_ACCENT), 0);
     lv_obj_set_style_shadow_width(s_scan, 24, 0);
     lv_obj_set_style_shadow_opa(s_scan, LV_OPA_60, 0);
     lv_obj_add_flag(s_scan, LV_OBJ_FLAG_HIDDEN);

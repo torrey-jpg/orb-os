@@ -57,7 +57,7 @@ int line_cb(PNGDRAW *d) {
         if (g_tint == ToothFrames::HOLOGRAM) {
             int l = (src[0] * 3 + src[1] * 6 + src[2]) / 10;   // brightness
             if (scanRow) l = l * 2 / 5;
-            v = rgb565(l * 45 / 100, l * 100 / 100 + (l > 200 ? 20 : 0), l * 82 / 100);
+            v = rgb565(l * 48 / 100, l * 88 / 100, l * 118 / 100 + 20);   // sky-blue glow
         } else {
             v = rgb565(src[0], src[1], src[2]);
         }

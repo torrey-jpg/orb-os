@@ -97,6 +97,7 @@ namespace app_shell {
         APP_TICKER,
 #endif
         APP_TOOTH,      // Kevin's Orb: Tooth Explorer
+        APP_FACTS,      // Kevin's Orb: Dental Fact of the Day
         APP_SETTINGS,
         APP_COUNT,
     };

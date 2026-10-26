@@ -1,0 +1,370 @@
+# Kevin's Orb - dental joke of the day.
+# One joke per line as SETUP|PUNCHLINE, read by the Orb from /facts/dental_jokes.txt on the SD card.
+# Same calendar as the facts: line 1 is January 1, line 60 is February 29, line 366 is December 31.
+# Lines starting with # are notes and are skipped. Plain ASCII only. Office-safe and goofy on purpose.
+What did the tooth say to the dentist on New Year's Day?|Let's make this year a clean start!
+What is a dentist's favorite New Year's resolution?|Floss more. Every year.
+What time should you go to the dentist?|Tooth-hurty.
+What does a dentist call his X-rays?|Tooth pics.
+Why did the king go to the dentist?|To get his teeth crowned.
+What do you call a bear with no teeth?|A gummy bear.
+Why did the tree go to the dentist?|It needed a root canal.
+What is a dentist's favorite animal?|A molar bear.
+What does the dentist of the year get?|A little plaque.
+Why did the smartphone go to the dentist?|It had Bluetooth.
+What did the tooth say to the departing dentist?|Fill me in when you get back.
+How many dentists does it take to change a light bulb?|Three: one to change it, two to discuss flossing more.
+What do you call a dentist who cleans an alligator's teeth?|Brave.
+Why did the cookie go to the dentist?|It lost its filling.
+What did the dentist say to the nervous tooth?|Relax, it's only a temporary filling.
+Which dinosaur had the best teeth?|The flossiraptor.
+What is a tooth's favorite dance?|The floss.
+What did one tooth say to the other?|Thar's gold in them fillings.
+What do you call a tooth that won't stop talking?|A chatter molar.
+Why was the tooth so good at golf?|It always made a hole in one.
+What does a dentist do on a roller coaster?|He braces himself.
+Why did the dentist and the manicurist break up?|They fought tooth and nail.
+Why did the dentist become a gardener?|He was great with roots.
+What do you call a dentist in the army?|A drill sergeant.
+How do you fix a broken tooth?|With toothpaste.
+What do you call a dentist who doesn't like tea?|Denis.
+Why did the dentist win an award?|He was outstanding in his filling.
+What is a dentist's favorite movie?|Plaque to the Future.
+What is a dentist's favorite TV show?|The Plaque-elor.
+What did the dentist say to the computer?|This won't hurt a byte.
+Why did the dentist go to art school?|He wanted to learn to draw teeth.
+What did the judge say to the dentist?|Do you swear to pull the tooth, the whole tooth and nothing but the tooth?
+Why are dentists great comedians?|They always know how to make you smile.
+What did the toothbrush say to the toothpaste?|Let's squeeze in some time together.
+Why did the toothpaste go to therapy?|It felt squeezed.
+Why did the patient read about teeth before his appointment?|He wanted to brush up.
+Why did the floss get promoted?|It was the best at getting into tight spots.
+What did the mouthwash say to the toothbrush?|I'll rinse and repeat.
+Why don't teeth ever win arguments?|They always get brushed off.
+What does a vampire call his dentist?|His fang-tastic friend.
+Why do vampires see the dentist so often?|They have bat breath.
+What did the vampire dentist say?|Open wide, this will only take a bite.
+What is a vampire's least favorite food at the dentist?|Garlic floss.
+Why did the tooth send flowers?|It wanted to make a good impression.
+What did the heart say to the tooth on Valentine's Day?|You're sweet, but too much sweet is bad for you.
+What does a dentist write in a Valentine?|I love you a molar-lot.
+Why did the shark see the dentist?|It had too many teeth to count.
+What is a dentist's favorite part of a story?|The plaque twist.
+What did the shark dentist say?|Bite down. No, not on me.
+Why don't sharks need braces?|They just grow new teeth.
+Why did the tooth get a medal?|For bravery under drill.
+What did the dentist say to the tooth that kept drifting?|Brace yourself.
+Why was the elephant's dentist so tired?|He had to brush the tusks.
+Why did the toothbrush blush?|It saw the dental floss.
+Why did the horse go to the dentist?|It had a sore neigh-bor tooth.
+Why do orthodontists love rubber bands?|They pull everything together.
+What did the alligator say at the dentist?|Make it snappy.
+What did the stubborn wisdom tooth say?|I'm not coming out without a fight.
+What did the dog say to the dentist?|My bark is worse than my bite.
+Leap day joke: why did the tooth love February 29?|It finally got an extra day to floss.
+Why did the dog go to the dentist?|He had a ruff tooth.
+What do you call a cat with perfect teeth?|Purr-fectly brushed.
+Why was the cat at the dentist?|It needed a fe-line filling.
+What did the tooth say after its fluoride treatment?|I'm feeling stronger already.
+Why did the chicken go to the dentist?|It wanted to eggs-amine its smile.
+Why is Dr. Hollar the best dentist?|Because he always makes people smile.
+What is a tooth's favorite game show?|Wheel of Floss-tune.
+What do you call a dentist who fixes ducks?|A quack.
+What did the duck say after the cleaning?|Put it on my bill.
+Why was the snail's dentist so busy?|Thousands of tiny teeth, one appointment.
+What do you call a dentist who loves extreme sports?|A drill seeker.
+Why do dentists love telling stories?|Their patients can't interrupt.
+What does a tooth do to unwind?|Takes a little crown time.
+Why did the molar go to therapy?|It had some deep-rooted issues.
+Why did the tooth fairy go to the bank?|To make a tooth deposit.
+What did the toothbrush say to the plaque?|Your days are numbered.
+What did the shamrock say to the tooth?|You're lucky to have such a nice smile.
+Why is the tooth fairy so smart?|She collects wisdom teeth.
+How does the tooth fairy pay?|With cold, hard crown.
+Why did the tooth fairy hire an assistant?|Business was really picking up.
+What do you call a sad tooth?|A molar-choly.
+Why did the molar smile?|It finally got a filling of happiness.
+What do you call a tooth with a great sense of humor?|A funny bone. Wait, wrong department.
+Why did the molar break up with the incisor?|They were not on the same plane.
+What did the incisor say to the canine?|You're such a sharp dresser.
+Why are canines so loyal?|They always stick by their neighbors.
+Why did the dentist frown at the cookie?|Too many chips.
+Why was the incisor always in front?|It liked to cut in line.
+What do you call two premolars talking?|A bicuspid discussion.
+Why do bicuspids get along?|They always meet halfway.
+Why was the wisdom tooth so calm?|It had seen it all.
+Why did the wisdom tooth get pulled?|It was too smart for its own good.
+What did the wisdom tooth say at graduation?|I've finally come through.
+Why do wisdom teeth come in late?|They like to make an entrance.
+Why did the Easter bunny visit the dentist?|Too many chocolate eggs.
+What do you call a wisdom tooth with no room?|Stuck in its ways.
+What did the dentist say to the stubborn wisdom tooth?|Let's get to the root of this.
+Why was the baby tooth so relaxed?|It knew it was only temporary.
+What did the baby tooth say to the grown-up tooth?|You've got big roots to fill.
+What does a dentist call a tooth with no cavities?|Hole-some.
+What did the loose tooth say?|I'm just hanging out for now.
+What do you call a tooth that tells lies?|A false tooth.
+Why did the dentures stay home?|They felt a little loose.
+What did the dentures say at the party?|I'm just here to take a bite.
+Where do dentures go at night?|A glass act.
+What do you call a tooth who will be king someday?|The crown prince.
+Why did the dentures get a job?|They wanted to make some chewing money.
+What did the crown say to the tooth?|I've got you covered.
+Why did the crown feel important?|It was on top of the world.
+What did the bridge say to the gap?|I've got this span handled.
+Why did the bridge feel lonely?|It was always between two friends.
+What did the implant say to the jawbone?|Let's get attached.
+Why was the implant so confident?|It was screwed on tight.
+What did the filling say to the cavity?|I've got this hole thing covered.
+Why do teeth love getting crowns?|They finally feel like royalty.
+What did the cavity say to the dentist?|I'm drilled to meet you.
+Why was the cavity so dramatic?|It always made a hole scene.
+What did the dentist say about the big cavity?|It was a real pit stop.
+Why did the dentist like his drill?|It was boring in the best way.
+What does a dentist drill do on weekends?|Gets some rest from the daily grind.
+Why did the drill get an award?|It always went the extra millimeter.
+What did the sealant say to the molar?|I've got your back. And your grooves.
+Why did the sealant join the team?|To fill in the cracks.
+What did fluoride say to the enamel?|Stay strong, my friend.
+Why does fluoride love enamel?|It brings out its hardest side.
+What did the enamel say to the acid?|You can't wear me down.
+Why is enamel so tough?|It's been through a lot of grind.
+What did the plaque say to the toothbrush?|You'll never brush me off.
+Why did the plaque get kicked out?|It was building up a bad reputation.
+What is plaque's favorite music?|Hard rock. It loves to build up.
+What did the tartar say?|I'm sticking around.
+Why did the tartar call the hygienist?|It needed some scaling back.
+What did the floss say to the tight space between two teeth?|Mind if I squeeze in?
+Why are hygienists great detectives?|They always find the plaque.
+What did the hygienist say to the nervous patient?|Relax, we're just scraping by.
+Why do hygienists love their jobs?|It's a scaling career.
+What did the gums say to the teeth?|We'll always support you.
+Why were the gums blushing?|They were a little inflamed.
+What did the gums say after flossing?|We feel so much better about ourselves.
+Why does the dentist carry a mirror?|To reflect on his work.
+What did the toothbrush say at bedtime?|Let's get bristles and shine tomorrow.
+Why was the toothbrush such a good friend?|It always had your back molars.
+Why did the hygienist bring a map?|To find the gum line.
+Why did the toothbrush get a haircut?|Its bristles were frayed.
+What did the electric toothbrush say?|I'm buzzing with excitement.
+Why did the electric toothbrush break up with the manual one?|It needed more energy in the relationship.
+What did the toothpaste say to the brush?|Let's stick together.
+Why was the toothpaste so happy?|It finally found the right tube-mate.
+What is toothpaste's favorite exercise?|Squeezes.
+Why did the toothpaste go to the party?|It heard there would be a lot of brushing up.
+Why did the dentist go to the art museum?|To see the Mona Lisa's smile.
+Why did the mouthwash stay cool?|It's always mint to be.
+What did the mouthwash say to the germs?|Swish you were here? No.
+What did the floss say at the concert?|Let's get between the bands.
+Why did the floss get invited everywhere?|It's great at getting in.
+What is a dentist's favorite kind of music?|The brace band.
+Why did the braces join the orchestra?|They wanted to play the wires.
+What did the braces say to the teeth?|Straighten up!
+Why did the teeth love their braces?|They brought everyone into line.
+What do you call a student with braces?|A straight-A student.
+Why did the orthodontist love his job?|Everything just lined up.
+What did the orthodontist say to the crooked tooth?|Let's straighten this out.
+Why was the retainer so loyal?|It always stayed put after the hard work.
+What did the retainer say?|I'll hold on to what we've got.
+What does an orthodontist do on vacation?|Brace for fun.
+What did the dentist say to the patient who wouldn't stop talking?|Open wide, but please, no more words.
+Why do dentists ask questions when your mouth is full of tools?|It's their favorite game of charades.
+How do teeth say hello?|With a big grin.
+Why did the dentist chair feel tired?|It was reclined all day.
+What did the dental chair say to the patient?|Sit back and relax, I've got you.
+Why did the dental mirror get promoted?|It always reflected well on the practice.
+Why is the dentist always smiling?|He knows how much work goes into one.
+Why is the dental explorer so curious?|It's always poking around.
+What did the X-ray say to the tooth?|I can see right through you.
+Why did the X-ray machine get a raise?|It always saw the big picture.
+What did the cavity say to the sugar?|You complete me.
+What did the patient say after the numbing shot?|I can't feel my face, and I'm okay with it.
+Why do dentists use numbing?|To keep the drama to a numb-inimum.
+What did the novocaine say to the patient?|You won't feel a thing about me.
+Why did the sugar feel guilty?|It caused a hole lot of trouble.
+What did the dentist say to the camera?|Say floss!
+Why did the dentist take up running?|He wanted better gum endurance.
+What is a dentist's favorite workout?|Mouth-ain climbing.
+What sport do teeth love most?|Brush-ketball.
+Why did the tooth join the football team?|It wanted to tackle plaque.
+Why do hockey players visit the dentist so often?|They love a good check-up.
+What did the mouthguard say to the hockey player?|I've got your smile covered.
+Why are gums so loyal to teeth?|They're very attached.
+What is a dentist's favorite subject in school?|Floss-ophy.
+Why did the dentist do well in math?|He knew all the square roots.
+What did the tongue say to the teeth?|Quit getting in front of me.
+What did the dentist name his boat?|The Plaque Pearl.
+Why did the tongue break up with the teeth?|It was tired of getting bitten.
+What is a dentist's favorite candy?|Gum, but only sugar-free.
+Why did the candy go to the dentist?|It felt a little hollow inside.
+What did the candy say to the tooth?|I'm stuck on you.
+What did the lips say to the teeth?|Don't worry, your secrets are sealed with us.
+What do you get when you cross a dentist and a chef?|A cook who really knows how to fill.
+What do you get when you cross a dentist and a boat?|A tooth ferry.
+What do you get when you cross a dentist and a magician?|Abra-cavity.
+What do you get when you cross a tooth and a lightbulb?|A bright smile.
+Why are teeth so honest?|They always tell the tooth.
+What do you get when you cross a dentist and an astronaut?|Someone who explores outer space between your teeth.
+Why did the astronaut see the dentist?|He had a cavity in orbit.
+What did the alien say at the dentist?|Take me to your filler.
+Why did the robot go to the dentist?|It had a byte problem.
+What does a robot use to clean its teeth?|A circuit brush.
+Why did the computer visit the dentist?|It had a megabyte missing.
+Why did the tooth wear glasses?|It couldn't see the floss coming.
+What does a pirate dentist say?|Arr, ye be needing a filling.
+Why do pirates have bad teeth?|They never floss on the high C's.
+Where do pirates get fillings?|At the Arr-thodontist.
+What did the pirate say about his gold tooth?|It's me buried treasure.
+What did the cowboy say to the dentist?|This mouth ain't big enough for the both of us.
+Why did the cowboy get braces?|He wanted a straight shot.
+What did the knight say at the dentist?|Joust a quick cleaning, please.
+Why did the dragon go to the dentist?|It had terrible flame breath.
+What did the dragon's dentist wear?|Fire-proof gloves.
+What did the patient say after the cleaning?|My teeth feel so polished.
+What do you call a dinosaur that never brushes?|A plaque-osaurus.
+What did the T. rex say to the dentist?|I can't reach my teeth to brush.
+Why are dinosaurs bad at flossing?|Their arms are too short.
+What do you call a dinosaur with a gold tooth?|A bling-osaurus.
+Why did the dinosaur have perfect teeth?|It kept getting new ones. Show-off.
+What do you call a fish with no teeth?|A gum-my fish.
+Why don't fish need dentists?|They have their scales checked instead.
+What did the octopus say to the dentist?|Eight arms and still I can't floss right.
+What did the dentist say at the steakhouse?|Chew carefully, I'm off duty.
+What did the walrus say at the dentist?|Please, tusk-tusk, be gentle.
+Why did the narwhal see the dentist?|It had one very long tooth problem.
+What did the hippo say to the dentist?|Open wide? I was born ready.
+Why was the hippo's dentist exhausted?|Its mouth was a whole room.
+Why do dentists love their jobs?|Every day is filled with smiles.
+Why did the lion go to the dentist?|To get its roar-t canal.
+What did the dentist say to the tooth that wouldn't sit still?|Don't make me pull rank.
+Why did the bear stop eating honey?|The dentist bear-ly let him.
+What do you call a monkey with clean teeth?|A chimpressive smile.
+What do teeth wear to a fancy party?|Their crowns.
+What did the parrot say at the dentist?|Polly wants a cleaning.
+Why don't birds go to the dentist?|They have no teeth, just beaks and attitude.
+What did the bee say to the dentist?|It's too sweet in here.
+What is a dentist's favorite exercise?|Pull-ups.
+What did the snake say at the dentist?|Fangs for the cleaning.
+Why did the frog see the dentist?|It had a toad-ally bad tooth.
+What do teeth say when they're in a hurry?|Let's chew and go.
+Why did the tooth go to the party alone?|It didn't want to get crowded.
+What did the tooth say at the comedy club?|I've got a lot of good bites.
+Why do teeth make great friends?|They always smile at you.
+What did the molar say to the toothbrush?|Brush me off if you want, but don't forget the back.
+Why did the tooth get a job at the bank?|It was great with crowns.
+Why don't skeletons fear the dentist?|Their teeth are the only thing they've got left to lose.
+Why did the tooth paint itself white?|It wanted to look polished.
+What did the molar say to the dentist?|Grind it out, buddy.
+Why was the molar so wise?|It had a lot of grinding experience.
+What did the molar say when it was moving?|I've got a lot of roots here.
+Why did the soda apologize to the tooth?|It knew it had been eroding the relationship.
+What did the cracked tooth say?|I've been through a lot.
+What did the dentist name his puppy?|Canine, of course.
+What did the tooth say to the chocolate?|You're bad for me, but I like you.
+Why did the tooth refuse the soda?|It didn't want to get into an acid situation.
+What did the sports drink say to the tooth?|I'm not as innocent as I look.
+Why did the apple visit the dentist?|To get to the core of its problem.
+What did the carrot say to the tooth?|Crunch time.
+Why do teeth love cheese?|It's the gouda kind of snack.
+What did the milk say to the tooth?|I've got your calcium covered.
+Why did the ice cube go to the dentist?|It felt cold and sensitive.
+What did the sensitive tooth say?|Brrr, that's cold.
+Why are sensitive teeth so emotional?|They feel everything.
+What did the dentist say to the sensitive tooth?|Let's talk about your feelings.
+Why did the toothache feel important?|It was the pain of the town.
+What did the dentist say to the throbbing tooth?|Let's see what's eating you.
+Why did the dentist go on a diet?|He was tired of all the fillings.
+What did the dentist bring to the picnic?|Floss and a smile.
+Why did the dentist go to the beach?|To look for sand dollars and sea-lants.
+What did the dentist say at the beach?|Sun's out, smiles out.
+Why did the dentist plant a garden?|He wanted to grow his practice from the roots up.
+What does a dentist do when he's bored?|Drills down into a hobby.
+Why are dentists great at parties?|They know how to get everyone to open up.
+What did the dentist say to the fisherman?|You've got a hook stuck in your smile.
+What is a dentist's favorite card game?|Gold fish, with gold fillings.
+Why did the dentist like poker?|He always had a full crown.
+What did the patient say when the dentist found no cavities?|What a relief, a hole-in-none!
+Why did the dentist become a baker?|He was good at fillings and crusts.
+What did the dentist order at the coffee shop?|A floss-ted latte.
+Why do dentists like coffee breaks?|It's the only time they get to stop drilling.
+What did the dentist say to the stain?|You're not going to stick around.
+What do you call a dentist who works at night?|A tooth fairy with a degree.
+What did the dentist say to the lazy tooth?|Time to get a move on, molar.
+Why do dentists make great friends?|They always fill you in.
+What did the dentist say when he was surprised?|Well, I'll be brushed.
+Why did the dentist stay calm during the storm?|He was used to drills.
+What does the tooth fairy call her savings?|Her molar money.
+Why did the dentist bring an umbrella?|He heard there was a chance of drool.
+What did one dentist say to another?|Long time no see, open wide.
+Why did the dentist like the band?|They played a lot of molar-tones.
+What did the dentist say at the concert?|This music really gets to the root of things.
+Why did the canine tooth go to obedience school?|It kept biting things it shouldn't.
+What did the pumpkin say to the dentist?|Help, someone carved out half my teeth!
+What does a dentist give out on Halloween?|Toothbrushes.
+Why do dentists love Halloween?|Business really picks up in November.
+Why did the ghost go to the dentist?|It needed a boo-tiful smile.
+What did the skeleton say at the dentist?|My teeth are the only part I've got left to brag about.
+Why did the skeleton go to the dentist?|It wanted a bone-afide smile.
+What did the jack-o-lantern say to the dentist?|I'm missing a few teeth, but I'm still smiling.
+Why are teeth scared of Halloween?|Too many sweet tricks.
+What did the dentist say to the bookworm?|You really chew through those pages.
+Why do dentists like puzzles?|They love fitting the pieces together, like a bite.
+What did the dentist say about the puzzle?|It's a real brain-teeth-er.
+What is the dentist's favorite board game?|Chutes and Plaque-ers.
+Why did the dentist like chess?|He was great at checkmate... and check-ups.
+Why did the incisor become a chef?|It was great at slicing.
+Why did the dentist learn to juggle?|He was already handling a lot of tools.
+Why did the dentist like magic tricks?|He could make plaque disappear.
+What did the magician say at the dentist?|Pick a tooth, any tooth.
+Why did the dentist go to the circus?|To see the tightrope floss-er.
+What did the clown say to the dentist?|Make my smile bigger.
+Why did the dentist like the zoo?|So many teeth, so little time.
+What did the zookeeper say to the dentist?|Who wants to clean the lion's teeth? Not me.
+Why do teeth hate traffic?|Too much grinding.
+Why did the orthodontist bring a ruler to work?|To make sure everything was straight.
+Why did the tooth get a car?|To drive its point home.
+What does a tooth drive?|A molar-cycle.
+Why did the tooth take the bus?|It didn't want to be pulled over.
+What did the tooth say on the airplane?|I'm a little nervous about takeoff... and extractions.
+Why did the tooth love the train?|Lots of chew-chew.
+What is a dentist's favorite selfie?|An X-ray of his best side.
+Why did the tooth go to space?|To find the milky way to stronger enamel.
+What did the moon say to the tooth?|You light up the night with that smile.
+What do turkeys say at the dentist?|Gobble, gobble... ow.
+What is a tooth's favorite Thanksgiving dish?|Brush-ed potatoes.
+Why do teeth love Thanksgiving?|Lots of chewing practice.
+What does a dentist say after Thanksgiving dinner?|Pass the floss.
+What did the gums say to the floss?|Thanks for getting between us and trouble.
+What did the dentist say to the bubble gum?|You're a sticky situation.
+Why do teeth like rainbows?|Every color, but they still want to be white.
+What is a dentist's favorite fairy tale?|Goldilocks and the Three Fillings.
+Why don't dentists like hard candy?|It's a jawbreaker.
+What did the tooth say on its birthday?|Another year, still smiling.
+Why did the tooth throw a party?|It had something to chew-lebrate.
+What did the candle say to the birthday tooth?|Make a wish, then brush.
+What is a dentist's favorite day of the week?|Tooth-day.
+What did the dentist say on his birthday?|Let them eat cake. Then floss.
+Why did the dentist love Mondays?|A fresh week of smiles.
+Why do dentists love caramel?|It keeps them in business.
+Why are weekends good for teeth?|More time for brunch-ing... and brushing.
+What did the tooth say at the end of the day?|I'm all worn out.
+Why did the tooth go to bed early?|It wanted to be well rested for the daily grind.
+What did the toothbrush say good night?|Sleep tight, don't let the plaque bite.
+Why did the tooth have sweet dreams?|It skipped the late-night candy.
+What did the dentist say to the jawbreaker?|You live up to your name.
+What did the tooth say when it woke up?|Rise and shine. Mostly shine.
+Why did the tooth love mornings?|Fresh breath, fresh start.
+What is a tooth's favorite exercise?|Chew-ps.
+What did the gingerbread man use to fix his smile?|Icing fillings.
+What do you call a holiday grump who grinds his teeth?|The Grind-ch.
+Why did the candy cane go to the dentist?|It was feeling a little stripped.
+What do elves use to clean their teeth?|Floss-ty the Snowman.
+What does Santa say at the dentist?|Ho, ho, hold the drill.
+What is a tooth's favorite holiday?|Flossmas.
+What is the dentist's favorite holiday song?|All I Want for Christmas Is My Two Front Teeth.
+Why did the tooth join a yoga class?|To work on its root chakra.
+What did the yoga teacher say to the tooth?|Breathe in, floss out.
+Why was the tooth so flexible?|It had great ligaments.
+What did the tooth say to the dentist at the end of the year?|Thanks for another year of keeping me in line.
+Why did the tooth celebrate New Year's Eve?|It made it through another year of candy.
+What did the dentist say at midnight on New Year's Eve?|Out with the old plaque, in with the new year.

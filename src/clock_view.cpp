@@ -660,6 +660,193 @@ static void fill_plate(int x, int y, int w, int h, int radius, lv_color_t col, l
     }
 }
 
+// ---- Kevin's Orb: the Rolex-style date wheels --------------------------------------------
+//
+// The month and the day are printed on two little ivory wheels seen through windows in the
+// dial (theme_style::Clock::DateWheel says where). They are drawn here, under the hands, so
+// the hands pass over them as they would on a watch. When the date changes the wheel rolls:
+// the old value scrolls up out of the window and the new one rolls in from below, over
+// WHEEL_ROLL_MS. A shading pass afterwards darkens the top and bottom of each window so the
+// face reads as the curved edge of a wheel, not a flat label.
+LV_FONT_DECLARE(font_kevin_date_22);
+static const uint32_t WHEEL_ROLL_MS = 1500;
+static int      s_wheelDay = -1, s_wheelMon = -1;     // what the wheels are settled on
+static int      s_wheelPrevDay = -1, s_wheelPrevMon = -1;
+static uint32_t s_wheelRollAt = 0;                   // when the current roll began
+
+// Scratch for the wheels, in PSRAM and only once a dated theme is shown: the rows around a
+// window (3 window-heights), plus a flat copy of a finished window and what it covered,
+// which the curved windows need. Never freed: 32 KB of PSRAM, the same every time.
+static const int WHEEL_MAX_W = 80, WHEEL_MAX_H = 40;
+static lv_color_t *wheel_scratch() {
+    static lv_color_t *buf = nullptr;
+    if (!buf) buf = (lv_color_t *)heap_caps_malloc(sizeof(lv_color_t) * WHEEL_MAX_W * WHEEL_MAX_H * 5,
+                                                   MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    return buf;
+}
+
+static inline uint16_t wheel_shade565(uint16_t c, float k) {
+    int r = (c >> 11) & 0x1F, g = (c >> 5) & 0x3F, b = c & 0x1F;
+    r = (int)(r * k); g = (int)(g * k); b = (int)(b * k);
+    return (uint16_t)((r << 11) | (g << 5) | b);
+}
+
+static void wheel_window(int cx, int cy, int w, int h, const char *now, const char *prev,
+                         float roll, uint32_t wheelCol, uint32_t ink) {
+    const int x0 = cx - w / 2, y0 = cy - h / 2;
+    if (x0 < 0 || y0 - h < 0 || x0 + w > SCREEN_W || y0 + 2 * h > SCREEN_H) return;
+    const lv_color_t face = lv_color_hex(wheelCol);
+    for (int y = 0; y < h; ++y)
+        for (int x = 0; x < w; ++x) s_buf[(y0 + y) * SCREEN_W + x0 + x] = face;
+
+    // The text may scroll past the window, so keep the rows above and below it and put them
+    // back afterwards: that is the window's edge clipping the wheel.
+    lv_color_t *saved = wheel_scratch();
+    if (!saved || w > WHEEL_MAX_W || h > WHEEL_MAX_H) return;
+    for (int y = 0; y < 3 * h; ++y)
+        memcpy(&saved[y * w], &s_buf[(y0 - h + y) * SCREEN_W + x0], (size_t)w * sizeof(lv_color_t));
+
+    lv_draw_label_dsc_t ld;
+    lv_draw_label_dsc_init(&ld);
+    ld.font  = &font_kevin_date_22;
+    ld.color = lv_color_hex(ink);
+    ld.align = LV_TEXT_ALIGN_CENTER;
+    const int lh = lv_font_get_line_height(&font_kevin_date_22);
+    const int ty = cy - lh / 2;
+    const float e = roll < 1.0f ? (1.0f - cosf(roll * 3.14159265f)) * 0.5f : 1.0f;   // ease in-out
+    const int off = (int)lroundf(e * h);
+    if (roll < 1.0f && prev && prev[0])
+        lv_canvas_draw_text(s_canvas, x0, ty - off, w, &ld, prev);
+    if (now && now[0])
+        lv_canvas_draw_text(s_canvas, x0, ty + (roll < 1.0f ? h - off : 0), w, &ld, now);
+
+    for (int y = 0; y < 3 * h; ++y) {
+        if (y >= h && y < 2 * h) continue;   // inside the window: keep what was drawn
+        memcpy(&s_buf[(y0 - h + y) * SCREEN_W + x0], &saved[y * w], (size_t)w * sizeof(lv_color_t));
+    }
+    // Curvature: brightest across the middle, falling off toward the top and bottom edges.
+    for (int y = 0; y < h; ++y) {
+        const float k = 0.62f + 0.38f * sinf(3.14159265f * (y + 0.5f) / h);
+        uint16_t *row = (uint16_t *)&s_buf[(y0 + y) * SCREEN_W + x0];
+        for (int x = 0; x < w; ++x) row[x] = wheel_shade565(row[x], k);
+    }
+}
+
+// A curved window: the wheel is drawn flat, exactly as above, then bent onto the arc. Each
+// screen pixel inside the window is traced back to the flat drawing through its angle and
+// distance from the arc's centre, so the letters follow the curve and lean with it, the
+// shading still runs across the wheel, and the roll still scrolls along it.
+static void wheel_window_arc(const theme_style::Clock::DateWheel &dw, int sx, int w, int h,
+                             const char *now, const char *prev, float roll) {
+    const float R = (float)dw.arcR;
+    const float s = ((float)sx - dw.arcCX) / R;
+    if (s <= -0.95f || s >= 0.95f) return;
+    const float phc = asinf(s);                                  // the window's centre angle
+    const float half = w * 0.5f / R;                             // its half-width, as an angle
+    // Where to draw it flat: the window's centre on the arc.
+    const int fx = (int)lroundf(dw.arcCX + R * sinf(phc));
+    const int fy = (int)lroundf(dw.arcCY + R * cosf(phc));
+    const int x0 = fx - w / 2, y0 = fy - h / 2;
+    if (x0 < 0 || y0 - h < 0 || x0 + w > SCREEN_W || y0 + 2 * h > SCREEN_H) return;
+    lv_color_t *scr = wheel_scratch();
+    if (!scr || w > WHEEL_MAX_W || h > WHEEL_MAX_H) return;
+    lv_color_t *under = scr + WHEEL_MAX_W * WHEEL_MAX_H * 3;     // what the flat drawing covers
+    lv_color_t *flat  = scr + WHEEL_MAX_W * WHEEL_MAX_H * 4;     // the finished flat window
+    for (int y = 0; y < h; ++y) memcpy(&under[y * w], &s_buf[(y0 + y) * SCREEN_W + x0], (size_t)w * sizeof(lv_color_t));
+    wheel_window(fx, fy, w, h, now, prev, roll, dw.wheel, dw.ink);
+    for (int y = 0; y < h; ++y) {
+        memcpy(&flat[y * w], &s_buf[(y0 + y) * SCREEN_W + x0], (size_t)w * sizeof(lv_color_t));
+        memcpy(&s_buf[(y0 + y) * SCREEN_W + x0], &under[y * w], (size_t)w * sizeof(lv_color_t));
+    }
+    // The bent window's bounds on screen: its four corners, and the lowest point of the outer
+    // edge if the window straddles the bottom of the circle.
+    const float rIn = R - h * 0.5f, rOut = R + h * 0.5f;
+    float bx0 = 1e9f, by0 = 1e9f, bx1 = -1e9f, by1 = -1e9f;
+    const float angs[3] = { phc - half, phc + half, 0.0f };
+    for (int i = 0; i < 3; ++i) {
+        if (i == 2 && !(phc - half < 0.0f && phc + half > 0.0f)) break;
+        const float radii[2] = { rIn, rOut };
+        for (float rr : radii) {
+            const float px = dw.arcCX + rr * sinf(angs[i]), py = dw.arcCY + rr * cosf(angs[i]);
+            bx0 = fminf(bx0, px); bx1 = fmaxf(bx1, px); by0 = fminf(by0, py); by1 = fmaxf(by1, py);
+        }
+    }
+    const int ix0 = (int)floorf(bx0) - 1, iy0 = (int)floorf(by0) - 1;
+    const int ix1 = (int)ceilf(bx1) + 1,  iy1 = (int)ceilf(by1) + 1;
+    if (ix0 < 0 || iy0 < 0 || ix1 >= SCREEN_W || iy1 >= SCREEN_H) return;
+    for (int y = iy0; y <= iy1; ++y) {
+        for (int x = ix0; x <= ix1; ++x) {
+            const float dx = x + 0.5f - dw.arcCX, dy = y + 0.5f - dw.arcCY;
+            const float r = sqrtf(dx * dx + dy * dy);
+            const float u = (atan2f(dx, dy) - phc) * R + w * 0.5f;   // along the wheel
+            const float v = r - R + h * 0.5f;                         // across it
+            // Soft edge: a pixel half outside the window is half covered.
+            const float cov = fminf(fminf(u, w - u), fminf(v, h - v)) + 0.5f;
+            if (cov <= 0.0f) continue;
+            // Bilinear sample of the flat window.
+            float fu = fminf(fmaxf(u - 0.5f, 0.0f), w - 1.001f), fv = fminf(fmaxf(v - 0.5f, 0.0f), h - 1.001f);
+            const int iu = (int)fu, iv = (int)fv;
+            const lv_opa_t au = (lv_opa_t)lroundf((fu - iu) * 255), av = (lv_opa_t)lroundf((fv - iv) * 255);
+            const lv_color_t *a = &flat[iv * w + iu];
+            const lv_color_t top = lv_color_mix(a[1], a[0], au);
+            const lv_color_t bot = lv_color_mix(a[w + 1], a[w], au);
+            lv_color_t c = lv_color_mix(bot, top, av);
+            lv_color_t *dst = &s_buf[y * SCREEN_W + x];
+            *dst = cov >= 1.0f ? c : lv_color_mix(c, *dst, (lv_opa_t)lroundf(cov * 255));
+        }
+    }
+}
+
+// One window, flat or curved as the theme says.
+static void date_window(const theme_style::Clock::DateWheel &dw, int x, int y, int w,
+                        const char *now, const char *prev, float roll) {
+    if (dw.arcR > 0) wheel_window_arc(dw, x, w, dw.h, now, prev, roll);
+    else             wheel_window(x, y, w, dw.h, now, prev, roll, dw.wheel, dw.ink);
+}
+
+static void draw_date_wheels(const struct tm *ti) {
+    const theme_style::Clock::DateWheel &dw = theme_style::clock().dateWheel;
+    if (!dw.show || !dw.h || !s_buf) return;
+    static const char *MON[12] = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+                                   "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
+    const uint32_t now = lv_tick_get();
+    if (s_noTime) {   // no date yet: blank wheels rather than a wrong one
+        date_window(dw, dw.monX, dw.monY, dw.monW, "", "", 1.0f);
+        date_window(dw, dw.dayX, dw.dayY, dw.dayW, "", "", 1.0f);
+        return;
+    }
+    const int day = ti->tm_mday, mon = ti->tm_mon % 12;
+#if !defined(ESP_PLATFORM)
+    // Simulator: SIM_DATE_ROLL=1 pretends midnight has just passed, 10 seconds after start,
+    // so the wheels roll from yesterday to today where it can be watched (or photographed).
+    static bool simRoll = getenv("SIM_DATE_ROLL") != nullptr;
+    if (simRoll && s_wheelDay >= 0 && now > 10000) {
+        simRoll = false;
+        s_wheelDay = day > 1 ? day - 1 : 28;
+        if (day == 1) s_wheelMon = (mon + 11) % 12;
+    }
+#endif
+    if (s_wheelDay < 0) { s_wheelDay = day; s_wheelMon = mon; }
+    if (day != s_wheelDay || mon != s_wheelMon) {   // midnight: start a roll
+        s_wheelPrevDay = s_wheelDay; s_wheelPrevMon = s_wheelMon;
+        s_wheelDay = day; s_wheelMon = mon;
+        s_wheelRollAt = now ? now : 1;
+    }
+    float roll = 1.0f;
+    if (s_wheelRollAt) {
+        roll = (float)(now - s_wheelRollAt) / WHEEL_ROLL_MS;
+        if (roll >= 1.0f) { roll = 1.0f; s_wheelRollAt = 0; }
+    }
+    char d[4], pd[4];
+    snprintf(d, sizeof d, "%d", day);
+    snprintf(pd, sizeof pd, "%d", s_wheelPrevDay > 0 ? s_wheelPrevDay : day);
+    const bool monRolls = s_wheelPrevMon >= 0 && s_wheelPrevMon != mon;
+    date_window(dw, dw.monX, dw.monY, dw.monW, MON[mon], monRolls ? MON[s_wheelPrevMon] : MON[mon],
+                monRolls ? roll : 1.0f);
+    date_window(dw, dw.dayX, dw.dayY, dw.dayW, d, pd, roll);
+    if (roll >= 1.0f) s_wheelPrevMon = -1;
+}
+
 static void draw_baked_text(const lv_font_t *font, const char *fmt, int bx, int by,
                             uint32_t color, int glow, uint32_t glowColor, int align,
                             const struct tm *ti, const char *which, lv_opa_t opa = LV_OPA_COVER,
@@ -1674,6 +1861,7 @@ static void compose_custom(const struct tm *ti, int stopKind, bool withOverlay) 
     const uint32_t ph1 = micros();
 #endif
     if (!theme_style::clock().textOverHands) draw_banners();
+    draw_date_wheels(ti);   // Kevin's Orb: always under the hands, like a watch's date window
 #if defined(ESP_PLATFORM)
     s_phText += (float)(micros() - ph1) / 1000.0f;
 #endif
@@ -3111,6 +3299,14 @@ static void tick_cb(lv_timer_t * /*t*/) {
             s_underMins  = -1.0f;     // ...and creeping ones, which is what was missing
             s_noMinValid = false;     // s_noMin holds the background as well
             s_fullNext   = true;      // and the frame after it repaints in full
+        }
+        // Kevin's Orb: while a date wheel is rolling, the dial under the hands changes every
+        // frame just as it does for a background frame, so the same caches have to go.
+        if (s_wheelRollAt) {
+            s_underMin   = -1;
+            s_underMins  = -1.0f;
+            s_noMinValid = false;
+            s_fullNext   = true;
         }
         // Tick fast enough for whichever of the two needs it more, never just the animation.
         //

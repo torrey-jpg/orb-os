@@ -21,10 +21,13 @@ namespace {
 // Fixed dental palette on true black (AMOLED black pixels are off). Not themed by Orb
 // Studio: this screen is ours, and Studio does not know it exists.
 const uint32_t COL_ENAMEL = 0xF4F1E8;   // tooth white, a touch warm
-const uint32_t COL_MINT   = 0x5FE3C0;   // accent
-const uint32_t COL_GREY   = 0x8A9A9A;   // secondary text
-const uint32_t COL_DIM    = 0x2E3B39;   // unlit arch dots
-const uint32_t COL_HINT   = 0x4A5A58;
+// Accent: sky blue, chosen for Dr. Hollar's red/green colour blindness. Blue stays blue
+// to a red/green colour-blind eye; the mint this replaced looks almost white to one
+// (simulated, Machado 2009), so it could not be told apart from the white text.
+const uint32_t COL_ACCENT   = 0x5BC0FF;   // accent
+const uint32_t COL_GREY   = 0x9A9A9A;   // secondary text
+const uint32_t COL_DIM    = 0x34383C;   // unlit arch dots
+const uint32_t COL_HINT   = 0x5C5C5C;
 
 // ---- geometry (466 x 466 round panel) --------------------------------------------------
 const int   CX = 233, CY = 233;
@@ -96,9 +99,9 @@ void style_dot(int num, bool lit) {
     dot_pos(num, x, y);
     lv_obj_set_size(d, size, size);
     lv_obj_set_pos(d, x - size / 2, y - size / 2);
-    lv_obj_set_style_bg_color(d, lv_color_hex(lit ? COL_MINT : COL_DIM), 0);
+    lv_obj_set_style_bg_color(d, lv_color_hex(lit ? COL_ACCENT : COL_DIM), 0);
     lv_obj_set_style_shadow_width(d, lit ? 16 : 0, 0);
-    lv_obj_set_style_shadow_color(d, lv_color_hex(COL_MINT), 0);
+    lv_obj_set_style_shadow_color(d, lv_color_hex(COL_ACCENT), 0);
     lv_obj_set_style_shadow_opa(d, lit ? LV_OPA_70 : LV_OPA_TRANSP, 0);
 }
 
@@ -283,13 +286,13 @@ lv_obj_t *toothview::build() {
     lv_label_set_text(s_noimg, "3D teeth not installed\nSD card: /teeth");
     lv_obj_add_flag(s_noimg, LV_OBJ_FLAG_HIDDEN);
 
-    lv_obj_t *title = make_label(s_screen, &lv_font_montserrat_12, COL_MINT, 54, 0);
+    lv_obj_t *title = make_label(s_screen, &lv_font_montserrat_12, COL_ACCENT, 54, 0);
     lv_obj_set_style_text_letter_space(title, 3, 0);
     lv_label_set_text(title, "TOOTH EXPLORER");
 
     s_number = make_label(s_screen, &lv_font_montserrat_36, COL_ENAMEL, 72, 0);
     s_name   = make_label(s_screen, &lv_font_montserrat_26, COL_ENAMEL, 352, 340);
-    s_sub    = make_label(s_screen, &lv_font_montserrat_14, COL_MINT, 386, 340);
+    s_sub    = make_label(s_screen, &lv_font_montserrat_14, COL_ACCENT, 386, 340);
 
     // The fact card: over the picture, shown by a push.
     s_card = lv_obj_create(s_screen);
@@ -299,7 +302,7 @@ lv_obj_t *toothview::build() {
     lv_obj_set_style_bg_color(s_card, lv_color_black(), 0);
     lv_obj_set_style_bg_opa(s_card, LV_OPA_80, 0);
     lv_obj_set_style_radius(s_card, 18, 0);
-    lv_obj_set_style_border_color(s_card, lv_color_hex(COL_MINT), 0);
+    lv_obj_set_style_border_color(s_card, lv_color_hex(COL_ACCENT), 0);
     lv_obj_set_style_border_width(s_card, 2, 0);
     lv_obj_set_style_border_opa(s_card, LV_OPA_60, 0);
     lv_obj_set_style_pad_all(s_card, 16, 0);

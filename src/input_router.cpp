@@ -9,6 +9,7 @@
 #include "app_shell.h"
 #include "knob.h"
 #include "screensaver.h"   // Kevin's Orb
+#include "daily_card.h"    // Kevin's Orb
 
 // What the knob does, in one place, shared by the device (main.cpp) and the simulator
 // (sim_main.cpp) so "it behaved right in the sim" means "it behaves right on the Orb".
@@ -125,9 +126,15 @@ void input_router::tick() {
 }
 
 void input_router::dispatch(int delta, bool pressed) {
-    // Kevin's Orb: any input first restarts the screensaver's idle clock, and if the
-    // screensaver is up, that input only wakes it.
-    if ((delta != 0 || pressed) && screensaver::wake()) return;
+    // Kevin's Orb. Any input first restarts the screensaver's idle clock. The first touch of
+    // the day brings up the fact-and-joke card; while that card is up, touches move it along.
+    // An input that wakes the screensaver or moves the card does nothing else.
+    if (delta != 0 || pressed) {
+        if (daily_card::consume()) return;
+        const bool woke = screensaver::wake();
+        if (daily_card::maybeShow()) return;
+        if (woke) return;
+    }
     // The "Ready" notice owns the knob until it is acknowledged, and ANY input clears it:
     // a turn either way or a press. It used to demand a press specifically, which made a
     // notice that exists to say "the knob is yours again" the one screen where most of the

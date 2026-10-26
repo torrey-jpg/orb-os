@@ -28,8 +28,11 @@ const int      RIM = 233;                // the dial's radius
 // make the dark vanish at exactly the moment it should be total.
 const int      DARK_MAX = RIM + 1;
 const int      STREAKS = 44;
-const uint32_t COL_WHITE = 0xE8FFF8;
-const uint32_t COL_MINT  = 0x5FE3C0;
+const uint32_t COL_WHITE = 0xF0F6FF;
+// Accent: sky blue, chosen for Dr. Hollar's red/green colour blindness. Blue stays blue
+// to a red/green colour-blind eye; the mint this replaced looks almost white to one
+// (simulated, Machado 2009), so it could not be told apart from the white text.
+const uint32_t COL_ACCENT  = 0x5BC0FF;
 
 const char *SOUND_PATH = "/sounds/warp.pcm";
 
@@ -153,7 +156,7 @@ void tick(lv_timer_t *) {
     const lv_opa_t opa = streak_opa(t);
     for (auto &s : s_streaks) place_streak(s, speed, opa);
 
-    // The arrival flash: a mint disc that blooms and fades as the dark opens.
+    // The arrival flash: an accent-coloured disc that blooms and fades as the dark opens.
     if (t >= T_SWAP && t < T_END) {
         const float f = clamp01((float)(t - T_SWAP) / 320.0f);
         const int d = (int)(20 + 300 * ease_out(f));
@@ -208,9 +211,9 @@ void warp::start(void (*swap)(int arg), int arg) {
         s.speed = 0.6f + (rand() % 100) * 0.008f;
         s.phase = (rand() % 1000) / 1000.0f;
         s.line  = lv_line_create(s_root);
-        const bool mint = (i % 3) == 0;
-        lv_obj_set_style_line_color(s.line, lv_color_hex(mint ? COL_MINT : COL_WHITE), 0);
-        lv_obj_set_style_line_width(s.line, mint ? 3 : 2, 0);
+        const bool accent = (i % 3) == 0;
+        lv_obj_set_style_line_color(s.line, lv_color_hex(accent ? COL_ACCENT : COL_WHITE), 0);
+        lv_obj_set_style_line_width(s.line, accent ? 3 : 2, 0);
         lv_obj_set_style_line_rounded(s.line, true, 0);
         lv_obj_set_style_line_opa(s.line, LV_OPA_TRANSP, 0);
         s.pts[0] = s.pts[1] = { (lv_coord_t)CX, (lv_coord_t)CY };
@@ -221,7 +224,7 @@ void warp::start(void (*swap)(int arg), int arg) {
     s_flash = lv_obj_create(s_root);
     lv_obj_remove_style_all(s_flash);
     lv_obj_set_style_radius(s_flash, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_bg_color(s_flash, lv_color_hex(COL_MINT), 0);
+    lv_obj_set_style_bg_color(s_flash, lv_color_hex(COL_ACCENT), 0);
     lv_obj_set_style_bg_opa(s_flash, LV_OPA_TRANSP, 0);
     lv_obj_add_flag(s_flash, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(s_flash, LV_OBJ_FLAG_CLICKABLE);

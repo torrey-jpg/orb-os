@@ -1,0 +1,371 @@
+# Kevin's Orb - dental fact of the day.
+# One fact per line, read by the Orb from /facts/dental_facts.txt on the SD card.
+# Line 1 is January 1, line 60 is February 29 (shown only in leap years), line 366 is December 31.
+# Lines starting with # are notes and are skipped. Keep to plain ASCII: no curly quotes or dashes.
+# Written from established dental anatomy, history and science. FOR DR. HOLLAR TO REVIEW.
+Tooth enamel is the hardest substance in the human body.
+Enamel is about 96 percent mineral, mostly a crystal called hydroxyapatite.
+Enamel has no living cells, so the body cannot regrow it once it is lost.
+Dentin, the layer under the enamel, is filled with microscopic tubules running toward the pulp.
+The pulp at the center of a tooth holds its nerves and blood vessels.
+Cementum, a thin bone-like layer, covers the roots and anchors the periodontal ligament.
+The periodontal ligament acts like a shock absorber between a tooth and its socket.
+Adults usually have 32 permanent teeth, including the four wisdom teeth.
+Children have 20 primary teeth, often called baby teeth.
+The first primary teeth usually appear at around 6 months of age.
+Most children have all 20 primary teeth by about age 3.
+The first permanent molars arrive around age 6, behind the baby teeth, so they are called six-year molars.
+Second molars usually arrive around age 12, earning the name twelve-year molars.
+Wisdom teeth usually arrive between ages 17 and 21, if they arrive at all.
+Many people never develop one or more of their wisdom teeth.
+Lower central incisors are usually the first baby teeth to come in.
+The upper canine has the longest root of any tooth in the mouth.
+The lower central incisor is the smallest permanent tooth.
+Upper first molars usually have three roots; lower molars usually have two.
+Canines are sometimes called eye teeth because of their position under the eyes.
+Premolars are also called bicuspids, after their two main cusps.
+Incisors cut, canines tear, premolars and molars crush and grind.
+The Universal Numbering System numbers adult teeth from 1 to 32.
+In Universal numbering, tooth number 1 is the upper right third molar.
+In Universal numbering, tooth number 8 is the upper right central incisor.
+The FDI system, used in much of the world, gives each tooth a two-digit number.
+Baby teeth in the Universal system are lettered A through T instead of numbered.
+A tooth's crown is the part above the gum; the root is the part below.
+The narrow area where crown meets root is called the cervical line, or CEJ.
+Teeth are not bones: they cannot repair themselves the way bones do.
+Teeth begin forming before birth, while a baby is still in the womb.
+The buds for some permanent teeth form before birth too.
+Saliva helps neutralize acids and wash away food particles.
+Saliva contains calcium and phosphate that help repair early enamel damage.
+The body produces saliva all day, with much less flowing during sleep.
+Less saliva at night is one reason a bedtime brush matters so much.
+Dry mouth raises the risk of cavities because saliva protects the teeth.
+Fluoride helps enamel resist acid and can help reverse early decay.
+Fluoride works by forming fluorapatite, which is more acid-resistant than enamel crystal.
+Community water fluoridation began in Grand Rapids, Michigan, in 1945.
+The CDC named community water fluoridation one of the great public health achievements of the 20th century.
+Cavities are caused by acids made when mouth bacteria break down sugars.
+Streptococcus mutans is one of the bacteria most associated with tooth decay.
+Dental plaque is a sticky biofilm of bacteria that forms on teeth every day.
+Plaque that is not removed can harden into tartar, also called calculus.
+Tartar cannot be removed by brushing; it takes a professional cleaning.
+How often you eat sugar matters as much as how much sugar you eat.
+Sipping a sugary drink slowly keeps teeth in an acid bath for longer.
+Acids in soda, citrus and sports drinks can erode enamel directly.
+Waiting a little while to brush after acidic food gives enamel time to recover.
+Sugar-free gum stimulates saliva, which helps protect teeth after meals.
+Xylitol, a sugar substitute in some gum, is not fermented by cavity-causing bacteria.
+Brushing twice a day for two minutes is the standard recommendation.
+A soft-bristled toothbrush is recommended for most people.
+Replace your toothbrush every three to four months, or sooner if it frays.
+Brushing too hard can wear enamel and push gums back.
+Cleaning between teeth reaches surfaces a toothbrush cannot.
+Gingivitis, the earliest stage of gum disease, is usually reversible.
+Periodontitis is advanced gum disease that can destroy the bone around teeth.
+Leap day bonus: brushing twice a day in a leap year adds up to 732 brushings.
+Bleeding gums when brushing are a common early sign of gingivitis.
+Gum disease is a leading cause of tooth loss in adults.
+Smoking greatly increases the risk of gum disease.
+Research has linked gum disease with heart disease and diabetes.
+Dentists can spot signs of some body-wide diseases during a routine exam.
+A dental exam includes a check for signs of oral cancer.
+Dental X-rays let dentists see decay between teeth and below the gumline.
+Bitewing X-rays show the crowns of upper and lower back teeth together.
+A panoramic X-ray shows all the teeth and jaws in a single image.
+Digital dental X-rays use much less radiation than older film X-rays.
+A sealant is a thin coating painted on the chewing surfaces of back teeth.
+Sealants help keep food and bacteria out of the deep grooves of molars.
+The grooves on molars are called pits and fissures.
+Composite fillings are tooth-colored and bond directly to the tooth.
+Amalgam fillings have been used for more than 150 years.
+A crown is a cap that covers a damaged tooth to restore its shape and strength.
+A dental bridge replaces a missing tooth by anchoring to the teeth beside it.
+A root canal removes infected pulp and seals the inside of the tooth.
+After a root canal, many back teeth need a crown to protect them.
+Dental implants are titanium or zirconia posts that fuse with the jawbone.
+The fusion of an implant with bone is called osseointegration.
+Swedish surgeon Per-Ingvar Branemark discovered osseointegration in the 1950s.
+The first modern titanium dental implant was placed in 1965.
+Veneers are thin shells bonded to the front of teeth.
+Orthodontic braces move teeth by applying gentle, steady pressure.
+Teeth can move because bone reshapes itself around them under pressure.
+A retainer keeps teeth from drifting back after braces come off.
+A malocclusion is any misalignment of the upper and lower teeth.
+An overjet is how far the upper front teeth stick out past the lower ones.
+An overbite is how far the upper front teeth overlap the lower ones vertically.
+A crossbite is when upper teeth sit inside the lower teeth instead of outside.
+Bruxism is the habit of grinding or clenching the teeth.
+Many people grind their teeth during sleep without knowing it.
+A night guard can protect teeth from grinding damage.
+The jaw joint is called the temporomandibular joint, or TMJ.
+The masseter is one of the strongest muscles in the body for its size.
+Molars handle far more biting force than the front teeth.
+Each tooth is unique; even identical twins have different dental details.
+Dental records have long been used to help identify people.
+Forensic odontology is the study of teeth as evidence.
+Paul Revere, the American patriot, also worked as a dentist.
+Paul Revere identified the remains of Dr. Joseph Warren by a false tooth he had made for him.
+Doc Holliday, the famous Old West gambler, was trained as a dentist.
+George Washington lost almost all of his teeth and wore several sets of dentures.
+George Washington's dentures were not wood; they used ivory, metal and human and animal teeth.
+John Greenwood made dentures for George Washington.
+Pierre Fauchard, a French surgeon, is called the father of modern dentistry.
+Fauchard published The Surgeon Dentist in 1728, the first complete dental textbook.
+The world's first dental college opened in Baltimore in 1840.
+The Baltimore College of Dental Surgery is now part of the University of Maryland.
+The DDS degree, Doctor of Dental Surgery, was first awarded in Baltimore.
+DDS and DMD are equivalent degrees; schools simply choose different names.
+Harvard first awarded the DMD degree, Doctor of Dental Medicine, in 1867.
+The American Dental Association was founded in 1859.
+The first ADA Seal for a dental product was awarded in 1931.
+Horace Wells, a dentist, used nitrous oxide for a tooth extraction in 1844.
+William Morton, a dentist, demonstrated ether anesthesia in Boston in 1846.
+Novocaine, a local anesthetic once common in dentistry, was introduced in 1905.
+Lidocaine became widely used in dentistry after its development in the 1940s.
+Lucy Hobbs Taylor became the first American woman to earn a dental degree, in 1866.
+Robert Tanner Freeman was the first African American to earn a dental degree, in 1869.
+Wilhelm Roentgen discovered X-rays in 1895.
+Dentists began using X-rays within weeks of their discovery.
+The first electric dental drill was patented by George Green in 1875.
+The high-speed air-turbine dental drill arrived in the 1950s.
+Barbers once pulled teeth as part of their trade.
+Ancient Egyptians made a tooth-cleaning powder that included ash and myrrh.
+Chew sticks, frayed twigs used to clean teeth, have been used for thousands of years.
+The bristle toothbrush was invented in China in the 1400s.
+Early bristle toothbrushes used hog bristles on bamboo or bone handles.
+Nylon toothbrush bristles were introduced in 1938.
+William Addis made one of the first mass-produced toothbrushes in England around 1780.
+Toothpaste was first sold in a collapsible tube in the 1890s.
+Dental floss was first promoted by New Orleans dentist Levi Spear Parmly in the early 1800s.
+The first patent for dental floss was granted in 1874.
+Silk was the original material for dental floss.
+Nylon floss replaced silk during World War II.
+Fluoride toothpaste became widely available in the 1950s.
+Crest was the first fluoride toothpaste to earn the ADA Seal, in 1960.
+Archaeologists found a 9,000-year-old drilled tooth in Pakistan.
+A 6,500-year-old jaw from Slovenia shows a tooth filled with beeswax.
+Ancient people sometimes believed tooth decay was caused by tooth worms.
+The tooth worm myth lasted for centuries before being disproven.
+Ancient Etruscans made gold dental bridges more than 2,500 years ago.
+The Maya decorated teeth with inlays of jade and other stones.
+Porcelain dentures were developed in France in the late 1700s.
+Vulcanite rubber made dentures cheaper and more common in the 1800s.
+After the Battle of Waterloo, teeth from fallen soldiers were used in dentures.
+Dentures made with teeth from soldiers who fell at Waterloo in 1815 were called Waterloo teeth.
+The tooth fairy tradition grew popular in the United States in the 1900s.
+In parts of Europe and Latin America, a mouse collects lost baby teeth instead of a fairy.
+In Spain and Latin America, the tooth-collecting mouse is called Ratoncito Perez.
+In some cultures, children throw lost baby teeth onto the roof for luck.
+National Children's Dental Health Month is celebrated every February in the United States.
+World Oral Health Day is observed every year on March 20.
+National Dentist's Day in the United States is celebrated on March 6.
+October is National Dental Hygiene Month in the United States.
+The modern dental hygienist profession began in 1913 in Connecticut.
+Dr. Alfred Fones trained the first dental hygienists and is called the father of dental hygiene.
+Irene Newman, trained by Dr. Alfred Fones, became the first licensed dental hygienist.
+Sharks continually replace their teeth throughout their lives.
+A shark can grow and lose thousands of teeth in a lifetime.
+Elephant tusks are actually long incisor teeth.
+Elephants grow six sets of molars in their lifetime.
+A narwhal's tusk is a tooth that can grow more than 8 feet long.
+The narwhal tusk is a spiral tooth that usually grows from the left side of the jaw.
+Rodent incisors never stop growing.
+Beavers have orange incisors because their enamel contains iron.
+Rabbits' teeth grow continuously, so they must chew to keep them worn down.
+Snails have a ribbon-like tongue covered with thousands of tiny teeth.
+Giraffes have no upper front teeth; they use a tough pad instead.
+Cows have no upper incisors either, only a hard dental pad.
+Dogs have 42 adult teeth, ten more than humans.
+Cats have 30 adult teeth.
+Horses' teeth keep erupting slowly throughout their lives.
+You can estimate a horse's age by looking at its teeth.
+Judging a horse's age by its teeth gave us the saying: never look a gift horse in the mouth.
+Crocodiles can replace each of their teeth many times over a lifetime.
+Hippos have huge canine teeth that keep growing throughout life.
+Walrus tusks are elongated canine teeth.
+Blue whales have no teeth; they filter food through baleen plates.
+Baleen is made of keratin, the same protein as fingernails.
+Dolphins have one set of teeth for life and do not replace them.
+Some dolphins have around 100 conical teeth.
+Armadillos have simple peg-like teeth with no enamel.
+Anteaters have no teeth at all.
+Birds have no teeth; they grind food in a muscular organ called the gizzard.
+Platypuses have teeth as babies but lose them and use grinding pads instead.
+Mosquitoes do not have teeth; they use a needle-like mouthpart.
+Tyrannosaurus rex had serrated teeth that could be about a foot long including the root.
+Dinosaurs replaced their teeth throughout their lives.
+Mammals typically get only two sets of teeth: baby teeth and adult teeth.
+The term diphyodont means having two successive sets of teeth, like humans.
+Humans are omnivores, and our mix of tooth shapes reflects that.
+Teeth present at birth are called natal teeth.
+Teeth that erupt within the first month of life are called neonatal teeth.
+An extra tooth is called a supernumerary tooth.
+A tooth that is missing from birth is called congenitally missing.
+After wisdom teeth, lower second premolars and upper lateral incisors are most often missing.
+A tooth that cannot fully erupt into the mouth is called impacted.
+Lower wisdom teeth are the most commonly impacted teeth.
+Hyperdontia means having extra teeth beyond the normal count.
+Hypodontia means having fewer teeth than normal.
+A tooth knocked out of its socket is called avulsed.
+A knocked-out permanent tooth has the best chance of saving if replanted within an hour.
+If a permanent tooth is knocked out, keep it moist, ideally in milk, and see a dentist fast.
+Never scrub a knocked-out tooth; handle it by the crown, not the root.
+Baby teeth that are knocked out are usually not put back in.
+Mouthguards help protect teeth during contact sports.
+Mouthguards are required equipment in high school football in the United States.
+Baby teeth hold space for the permanent teeth growing beneath them.
+Losing a baby tooth too early can let neighboring teeth drift into its space.
+Baby teeth have thinner enamel than permanent teeth.
+Baby teeth are whiter than permanent teeth, which can look more yellow by comparison.
+Baby teeth roots dissolve as the permanent teeth push up beneath them.
+Most children begin losing baby teeth around age 6.
+Most children lose their last baby tooth around age 12.
+A child's first dental visit is recommended by the first birthday.
+Early childhood cavities can begin as soon as the first tooth appears.
+Putting a baby to bed with a bottle of milk or juice can cause tooth decay.
+Tooth decay is one of the most common chronic diseases of childhood.
+Dental cavities are among the most common diseases in the world.
+Tooth sensitivity often comes from exposed dentin and its open tubules.
+Toothpastes for sensitive teeth can work by blocking dentin tubules or calming nerves.
+Receding gums can expose root surfaces, which have no enamel.
+Root surfaces decay more easily than enamel because they are softer.
+A cracked tooth can cause sharp pain when biting or releasing.
+An abscess is a pocket of infection at a tooth root or in the gums.
+A dental abscess needs professional treatment and will not go away on its own.
+Toothaches can sometimes be felt in the ear, jaw or head.
+Upper back tooth pain can sometimes come from a sinus infection.
+The roots of upper molars sit very close to the maxillary sinus.
+Halitosis is the medical term for bad breath.
+Much bad breath comes from bacteria on the back of the tongue.
+Cleaning your tongue can help reduce bad breath.
+The tongue is covered with small bumps called papillae.
+Taste buds sit mostly on the papillae of the tongue.
+Humans have thousands of taste buds that are replaced every one to two weeks.
+The tongue is made of several muscles working together.
+Most people have a frenum, a small fold of tissue, under the tongue and inside the lips.
+A tight tongue frenum, often called tongue-tie, can affect feeding and speech.
+Canker sores are not contagious; cold sores are.
+Cold sores are caused by the herpes simplex virus.
+The roof of the mouth is called the palate.
+The hard palate is bone; the soft palate behind it is muscle.
+The uvula is the small fleshy piece hanging at the back of the soft palate.
+The lips are red because the skin there is thin and blood vessels show through.
+The mouth contains hundreds of different species of bacteria.
+Not all mouth bacteria are bad; many help keep the mouth healthy.
+Antonie van Leeuwenhoek described bacteria from his own dental plaque in 1683.
+G.V. Black, a pioneer dentist, standardized cavity preparation and classification.
+G.V. Black's cavity classes, Class I to Class V, are still taught today.
+Frederick McKay investigated the brown-stained teeth of Colorado Springs residents.
+The brown-stained teeth seen in Colorado Springs were caused by naturally high fluoride in the water.
+Dentist Frederick McKay's research helped lead to the discovery that fluoride prevents decay.
+H. Trendley Dean's studies set the level of fluoride used in community water.
+Mottled enamel from too much fluoride is called dental fluorosis.
+Most dental fluorosis is very mild and appears as faint white spots.
+Tooth whitening works by using peroxide to break down stains inside enamel.
+Whitening does not change the color of fillings, crowns or veneers.
+Coffee, tea and red wine are common causes of tooth staining.
+Tobacco use is a major cause of both stained teeth and gum disease.
+Teeth naturally become a little more yellow with age as enamel thins.
+Enamel is translucent, so the yellowish dentin beneath shows through.
+The color of your teeth is partly genetic.
+Sports drinks can be as hard on enamel as soda because of their acids.
+Cheese can help protect teeth by raising mouth pH and adding calcium.
+Calcium and vitamin D support strong teeth and the jawbone.
+Vitamin C deficiency, called scurvy, causes bleeding gums and loose teeth.
+Chewing ice can crack teeth and fillings.
+Thumb sucking that continues past early childhood can affect how teeth line up.
+Pacifier use is best weaned by around age 2 to 4.
+A dry socket is a painful condition after an extraction when the blood clot is lost.
+Using a straw right after an extraction can dislodge the healing clot.
+Local anesthesia numbs only the area being treated.
+Dentists are trained to recognize and help with dental anxiety.
+Nitrous oxide, sometimes called laughing gas, is still used in dentistry today.
+A dental loupe is a magnifying lens dentists wear to see fine detail.
+Intraoral cameras let patients see exactly what the dentist sees.
+Many dental offices now use 3D scanners instead of messy impression trays.
+3D printers can make dental models, guides and even some restorations.
+CAD/CAM systems can mill a crown in the dental office in a single visit.
+Lasers are used in some dental procedures on gums and teeth.
+The dental mirror lets a dentist see the back of teeth and reflect light.
+The explorer is a sharp, pointed instrument used to feel tooth surfaces.
+A periodontal probe measures the depth of the pocket between gum and tooth.
+Healthy gum pockets are usually about 1 to 3 millimeters deep.
+A scaler is used to remove tartar from teeth.
+Prophylaxis is the clinical term for a professional dental cleaning.
+Most people should have regular dental checkups, often every six months.
+There are twelve recognized dental specialties in the United States.
+Orthodontics was the first dental specialty recognized in the United States.
+Endodontists specialize in the inside of the tooth, including root canals.
+Periodontists specialize in the gums and supporting structures of teeth.
+Prosthodontists specialize in replacing missing teeth.
+Pediatric dentists specialize in caring for children's teeth.
+Oral and maxillofacial surgeons treat the mouth, jaws and face.
+Edward Angle is known as the father of modern orthodontics.
+Edward Angle's system for classifying bite problems is still used by orthodontists today.
+Clear aligners straighten teeth using a series of removable plastic trays.
+Most dental schools in the United States take four years to complete.
+Dental students practice on manikins before treating patients.
+The word dentist comes from the Latin word dens, meaning tooth.
+The word dentistry entered English in the 1700s.
+The word orthodontics comes from Greek words meaning straight teeth.
+The word periodontal means around the tooth.
+The word endodontic means inside the tooth.
+The tooth's chewing surface is called the occlusal surface.
+The tooth surface facing the cheek is called the buccal surface.
+The tooth surface facing the lips is called the labial surface.
+The tooth surface facing the tongue is called the lingual surface.
+The side of a tooth toward the midline is mesial; the side away is distal.
+Where two teeth touch is called the contact point.
+The pointed tips on the chewing surfaces of teeth are called cusps.
+Upper first molars often have a small extra cusp called the cusp of Carabelli.
+Mamelons are the three small bumps on new incisor edges; they usually wear away with use.
+The gum tissue between two teeth is called the interdental papilla.
+The jawbone that holds the teeth is called the alveolar bone.
+The upper jaw is the maxilla; the lower jaw is the mandible.
+The mandible is the strongest bone in the face.
+The mandible is the only bone in the skull that moves freely.
+When teeth are lost, the jawbone in that area slowly shrinks.
+Implants can help preserve jawbone by giving it something to work against.
+Modern human jaws are smaller than those of our ancient ancestors.
+Smaller jaws help explain why wisdom teeth often lack room to erupt.
+Teeth are some of the best-preserved parts of ancient human remains.
+Scientists can learn about ancient diets by studying fossil teeth.
+Tooth enamel can record clues about where a person grew up.
+Enamel forms in growth layers, a little like the rings of a tree.
+Microscopic growth lines in enamel are called perikymata on the tooth surface.
+A tooth's enamel is thickest on the chewing surfaces of molars.
+Enamel can be about 2.5 millimeters thick at the cusps of molars.
+Dentin makes up most of a tooth's structure.
+Dentin is softer than enamel but harder than bone.
+The body can lay down new dentin inside a tooth throughout life.
+As we age, the pulp chamber gets smaller as dentin builds up inside.
+Odontoblasts are the cells that make dentin.
+Ameloblasts are the cells that make enamel, and they are lost once the tooth erupts.
+Teeth develop from tissue called the tooth germ.
+Tooth development is divided into stages called bud, cap and bell.
+Some people are born with a condition called amelogenesis imperfecta, affecting enamel.
+Dentinogenesis imperfecta is an inherited condition affecting dentin.
+Ectodermal dysplasia can cause missing or unusually shaped teeth.
+Peg laterals are small, cone-shaped upper lateral incisors.
+Shovel-shaped incisors have raised edges on their tongue side and are common in some populations.
+A diastema is a gap between two teeth.
+The most common diastema is between the two upper front teeth.
+Gold has been used to repair teeth for thousands of years.
+Gold is still used in dentistry because it is durable and gentle on opposing teeth.
+Zirconia is a very strong white ceramic used for crowns and implants.
+Porcelain crowns can be made to match the color of natural teeth closely.
+A shade guide helps match a restoration to the color of natural teeth.
+Teeth look different under different light, so dentists often check shades in daylight.
+Some ancient Romans cleaned their teeth with powders made from bone and shells.
+Sugar became widely available in Europe in the 1600s, and tooth decay increased.
+Queen Elizabeth I was famous for her blackened teeth from eating sugar.
+The first known dental professional, Hesy-Re, practiced in ancient Egypt about 4,600 years ago.
+Hesy-Re's tomb inscription called him the chief of dentists and physicians.
+Hippocrates wrote about teeth and gum disease more than 2,000 years ago.
+The phrase long in the tooth comes from horses, whose gums recede with age.
+The phrase by the skin of your teeth comes from the Book of Job.
+To cut your teeth on something means to gain your first experience with it.
+Something with teeth has real force or power, like a law with teeth.
+A wisdom tooth gets its name because it arrives when a person is older and wiser.
+A sweet tooth is a fondness for sugary foods.
+Thank you for caring for smiles, Dr. Hollar.

@@ -534,6 +534,22 @@ struct Clock {
     // design that draws anything above its second hand other than the glass falls back to
     // ticking rather than drawing the layers in the wrong order.
     bool      secondSweep = false;
+    // Kevin's Orb: a Rolex-style date window. The month (three letters) and the day sit on
+    // two little wheels seen through windows in the dial, drawn under the hands, and they
+    // roll to the next value when the date changes. Positions are the window centres in
+    // screen pixels. Absent from a theme means off.
+    struct DateWheel {
+        bool     show = false;
+        int      monX = 0, monY = 0, monW = 0;
+        int      dayX = 0, dayY = 0, dayW = 0;
+        int      h = 0;
+        // Curved ("smile") windows: when arcR > 0 both windows lie along a circle of radius
+        // arcR centred on (arcCX, arcCY), above them, so the row of windows bends up at the
+        // ends. monX/dayX are then the screen x of each window's centre; monY/dayY are unused.
+        int      arcCX = 0, arcCY = 0, arcR = 0;
+        uint32_t wheel = 0xEDE4CC;   // the wheel's face
+        uint32_t ink   = 0x1C1814;   // the printing on it
+    } dateWheel;
     // THEME_CAPS 52. The railway stop on that sweep: 58.5 seconds round, then a wait at 12.
     // Read only while sweeping, and only when this design asked for it.
     bool      secondRailway = false;
