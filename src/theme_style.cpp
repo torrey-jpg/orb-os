@@ -494,7 +494,7 @@ void load() {
                 w.show = dw["show"] | false;
                 w.monX = clampi(dw["monX"] | 0, 40, 425); w.monY = clampi(dw["monY"] | 0, 40, 425);
                 w.dayX = clampi(dw["dayX"] | 0, 40, 425); w.dayY = clampi(dw["dayY"] | 0, 40, 425);
-                w.monW = clampi(dw["monW"] | 0, 0, 80);   w.dayW = clampi(dw["dayW"] | 0, 0, 80);
+                w.monW = clampi(dw["monW"] | 0, 0, 160);  w.dayW = clampi(dw["dayW"] | 0, 0, 160);
                 w.h    = clampi(dw["h"] | 0, 0, 40);
                 w.arcCX = clampi(dw["arcCX"] | 0, -500, 1000); w.arcCY = clampi(dw["arcCY"] | 0, -500, 1000);
                 w.arcR  = clampi(dw["arcR"] | 0, 0, 1000);

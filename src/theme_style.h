@@ -534,7 +534,7 @@ struct Clock {
     // design that draws anything above its second hand other than the glass falls back to
     // ticking rather than drawing the layers in the wrong order.
     bool      secondSweep = false;
-    // Kevin's Orb: a Rolex-style date window. The month (three letters) and the day sit on
+    // Kevin's Orb: a Rolex-style date window. The month (full name) and the day sit on
     // two little wheels seen through windows in the dial, drawn under the hands, and they
     // roll to the next value when the date changes. Positions are the window centres in
     // screen pixels. Absent from a theme means off.

@@ -676,8 +676,8 @@ static uint32_t s_wheelRollAt = 0;                   // when the current roll be
 
 // Scratch for the wheels, in PSRAM and only once a dated theme is shown: the rows around a
 // window (3 window-heights), plus a flat copy of a finished window and what it covered,
-// which the curved windows need. Never freed: 32 KB of PSRAM, the same every time.
-static const int WHEEL_MAX_W = 80, WHEEL_MAX_H = 40;
+// which the curved windows need. Never freed: 64 KB of PSRAM, the same every time.
+static const int WHEEL_MAX_W = 160, WHEEL_MAX_H = 40;   // room for SEPTEMBER
 static lv_color_t *wheel_scratch() {
     static lv_color_t *buf = nullptr;
     if (!buf) buf = (lv_color_t *)heap_caps_malloc(sizeof(lv_color_t) * WHEEL_MAX_W * WHEEL_MAX_H * 5,
@@ -807,16 +807,20 @@ static void date_window(const theme_style::Clock::DateWheel &dw, int x, int y, i
 static void draw_date_wheels(const struct tm *ti) {
     const theme_style::Clock::DateWheel &dw = theme_style::clock().dateWheel;
     if (!dw.show || !dw.h || !s_buf) return;
-    static const char *MON[12] = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
-                                   "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
+    // Full month names (the theme's month window is wide enough for SEPTEMBER).
+    static const char *MON[12] = { "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY",
+                                   "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER" };
     const uint32_t now = lv_tick_get();
     if (s_noTime) {   // no date yet: blank wheels rather than a wrong one
         date_window(dw, dw.monX, dw.monY, dw.monW, "", "", 1.0f);
         date_window(dw, dw.dayX, dw.dayY, dw.dayW, "", "", 1.0f);
         return;
     }
-    const int day = ti->tm_mday, mon = ti->tm_mon % 12;
+    int day = ti->tm_mday, mon = ti->tm_mon % 12;
 #if !defined(ESP_PLATFORM)
+    // Simulator: SIM_MONTH=9 SIM_DAY=30 shows September 30, to check the longest names fit.
+    if (const char *m = getenv("SIM_MONTH")) { const int v = atoi(m); if (v >= 1 && v <= 12) mon = v - 1; }
+    if (const char *d = getenv("SIM_DAY"))   { const int v = atoi(d); if (v >= 1 && v <= 31) day = v; }
     // Simulator: SIM_DATE_ROLL=1 pretends midnight has just passed, 10 seconds after start,
     // so the wheels roll from yesterday to today where it can be watched (or photographed).
     static bool simRoll = getenv("SIM_DATE_ROLL") != nullptr;

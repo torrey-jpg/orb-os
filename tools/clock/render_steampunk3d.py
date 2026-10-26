@@ -14,7 +14,7 @@ Writes the theme folder the firmware reads (the same layout Orb Studio installs)
   OUTDIR/bateman-steampunk/clock_plate.png, clock_overlay.png, clock_hand_*.png,
   clock_shadow_*.png, clock_style.json, theme.json, _installed
 
-Usage: python3 render_steampunk3d.py OUTDIR [--name "BATEMAN DENTAL"]
+Usage: python3 render_steampunk3d.py OUTDIR [--name "DR. KEVIN HOLLAR"]   (no --name: no plate)
        [--frames 12] [--fps 4]   (the turning-gear loop; --frames 1 for a still dial)
 Needs numpy, scipy and Pillow. Original artwork, drawn in code.
 """
@@ -205,18 +205,25 @@ def add_gauge(S, cx, cy, r, z, label, value):
     pin = disc(cx, cy, 3.2)
     S.add(pin, bevel(pin, z + 2.5, 1.5, 1.5), "brass")
 
-# The date windows on the name plate. They lie along a gentle "smile": an arc of radius
-# ARC_R centred above them at (ARC_CX, ARC_CY), so the pair bends up at the ends. Each
-# window is (screen x of its centre, width along the arc). Shared with clock_style.json so
-# the firmware bends its wheels into exactly the frames the plate shows.
+# The date windows. They lie along a "smile": an arc of radius ARC_R centred above them at
+# (ARC_CX, ARC_CY), so the pair bends up at the ends. The month window is wide enough for
+# SEPTEMBER (136 px in the 22 px date face, with room either side) and the day window for "31"; the two are centred
+# on the dial AS A PAIR, measured along the arc. Each window is stored as (screen x of its
+# centre, width along the arc); clock_style.json carries the same numbers so the firmware
+# bends its wheels into exactly the frames drawn here.
 PLATE_TOP = C + 57
 PLATE_W = 172
 WIN_H = 24
-ARC_R = 170
+ARC_R = float(os.environ.get("DATE_ARC_R", 150))      # 150: a clear smile; 113 would be concentric with the dial
 ARC_CX = C
-ARC_CY = C + 113 - ARC_R          # the windows' middle is lowest at y = C + 113
-WIN_MON = (C - 32, 56)
-WIN_DAY = (C + 33, 38)
+ARC_MID_Y = C + 113                                     # the windows' lowest point
+ARC_CY = ARC_MID_Y - ARC_R
+MON_W, DAY_W, WIN_GAP = 156, 38, 10
+_span = MON_W + WIN_GAP + DAY_W
+_s_mon = -_span / 2 + MON_W / 2                         # centres, as distance along the arc
+_s_day = _span / 2 - DAY_W / 2
+WIN_MON = (round(ARC_CX + ARC_R * math.sin(_s_mon / ARC_R)), MON_W)   # whole pixels, as the firmware gets them
+WIN_DAY = (round(ARC_CX + ARC_R * math.sin(_s_day / ARC_R)), DAY_W)
 PLATE_RB = ARC_R + WIN_H / 2 + 4 + 7   # the plate's curved bottom edge, 7 px below the frames
 
 def arc_uv(xx, yy, wx):
@@ -239,20 +246,34 @@ def add_plate(S, text, cx, w, z):
     m = (np.array(im) > 127) & (np.hypot(XX - ARC_CX, YY - ARC_CY) <= PLATE_RB)
     m = ndimage.binary_opening(m, structure=np.hypot(*np.mgrid[-7 * SS:7 * SS + 1, -7 * SS:7 * SS + 1]) <= 7 * SS)  # round the bottom corners
     S.add(m, bevel(m, z, 2.5, 2.0), "brass", detail=brushed(cx, y0 + 35, 5, 0.03))
-    eng = text_mask(text, (cx, y0 + 15), 15)
+    # The engraving fits between the two rivets: as large as 15 px, smaller only if needed.
+    size = 15
+    while size > 11 and font(SERIF, size * SS).getbbox(text, anchor="mm")[2] / SS * 2 > w - 32:
+        size -= 1
+    eng = text_mask(text, (cx, y0 + 15), size)
     e = (eng > 0.25) & m
     S.h[e] -= 1.0
     S.alb[e] *= 0.22
     for rx in (x0 + 9, x1 - 9):
         add_rivet(S, rx, y0 + 15, 3.0, z + 2.5, "brassd")
-    # Two curved windows with raised brass frames. The inside is a dark recess; the Orb
-    # paints the date wheels into it live, bent to the same curve.
+    add_date_windows(S, z, m)
+
+def add_date_windows(S, z, within=None):
+    """Two curved windows with raised brass frames. The inside is a dark recess; the Orb
+    paints the date wheels into it live, bent to the same curve. With no plate (`within` is
+    None) the framed windows stand on their own over the gears, a little thicker so they
+    read as solid brass bezels, and cast their own shadows onto the works behind."""
+    rim = 4 if within is not None else 5
     for (wx, ww) in (WIN_MON, WIN_DAY):
         u, v = arc_uv(XX, YY, wx)
-        frame = (round_rect_dist(u, v, ww / 2 + 4, WIN_H / 2 + 4, 4) <= 0) & m
+        outer = round_rect_dist(u, v, ww / 2 + rim, WIN_H / 2 + rim, rim) <= 0
+        if within is not None:
+            outer &= within
         hole = (np.abs(u) <= ww / 2) & (np.abs(v) <= WIN_H / 2)
-        frame &= ~hole
-        S.add(frame, bevel(frame, z + 2.5, 1.8, 1.5), "brassd")
+        frame = outer & ~hole
+        if within is None:
+            S.add(hole, np.full((N, N), z - 1.0, np.float32), "dsteel")
+        S.add(frame, bevel(frame, z + 2.5, 2.2 if within is None else 1.8, 1.5), "brassd")
         S.h[hole] = z - 1.0
         S.alb[hole] = (0.08, 0.07, 0.06)
 
@@ -337,7 +358,11 @@ def build_dial(name, phase=0.0):
     add_gauge(S, C + 92, C + 6, 36, 14, "SUGAR", 0.12 + 0.008 * math.sin(2 * math.pi * k + 1.3))
 
     # name plate on two posts
-    add_plate(S, name, C, PLATE_W, 15)
+    # The date windows: on their own over the gears, or on an engraved plate if a name is given.
+    if name:
+        add_plate(S, name, C, PLATE_W, 15)
+    else:
+        add_date_windows(S, 15)
 
     # chapter ring: raised brass with engraved numerals, ivory molars at 12/3/6/9
     rm = ring(C, C, 146, 214)
@@ -512,7 +537,8 @@ def glass():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("outdir")
-    ap.add_argument("--name", default="BATEMAN DENTAL")
+    ap.add_argument("--name", default="",
+                    help="engrave a name plate behind the date windows (default: no plate)")
     ap.add_argument("--frames", type=int, default=12,
                     help="dial pictures in the turning-gear loop (1 = a still dial)")
     ap.add_argument("--fps", type=int, default=4)
@@ -548,9 +574,9 @@ def main():
     # The Rolex-style date: month and day wheels the firmware draws live into the plate's
     # two windows (theme_style::Clock::DateWheel), under the hands, rolling at midnight.
     style["dateWheel"] = {"show": True,
-                          "monX": int(WIN_MON[0]), "monY": int(ARC_CY + ARC_R), "monW": WIN_MON[1],
-                          "dayX": int(WIN_DAY[0]), "dayY": int(ARC_CY + ARC_R), "dayW": WIN_DAY[1],
-                          "h": WIN_H, "arcCX": int(ARC_CX), "arcCY": int(ARC_CY), "arcR": ARC_R,
+                          "monX": int(round(WIN_MON[0])), "monY": int(ARC_CY + ARC_R), "monW": WIN_MON[1],
+                          "dayX": int(round(WIN_DAY[0])), "dayY": int(ARC_CY + ARC_R), "dayW": WIN_DAY[1],
+                          "h": WIN_H, "arcCX": int(ARC_CX), "arcCY": int(round(ARC_CY)), "arcR": int(round(ARC_R)),
                           "wheel": 0xEDE4CC, "ink": 0x1C1814}
     if frames > 1:
         # Zion's moving background: EXTRA frames beyond the plate, looping for ever.
