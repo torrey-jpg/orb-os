@@ -40,7 +40,7 @@ namespace {
         uint32_t      lastUsed;  // s_useTick when this app was last loaded; 0 = never
     };
 
-    constexpr int   MAX_APPS      = 9;   // Kevin's Orb: 9 (Zion: 8); the hidden Flight Tracker still holds its slot
+    constexpr int   MAX_APPS      = 10;  // Kevin's Orb: 10 (Zion: 8); the hidden Flight Tracker still holds its slot
     constexpr uint32_t ANIM_MS    = 250;   // slide duration between apps
 
     App  s_apps[MAX_APPS];

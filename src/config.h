@@ -55,6 +55,15 @@
 #define KEVIN_WEDDING_Y 2027
 #define KEVIN_WEDDING_M 5
 #define KEVIN_WEDDING_D 29
+// Kevin's Orb: night mode. From KEVIN_NIGHT_START to KEVIN_NIGHT_END (local hours, 24 h) the
+// screen glows at KEVIN_NIGHT_BRIGHT (0..255; the normal default is 200, idle dim is 25).
+// A turn, a push or a knock brings it to full brightness at once, and it dims again after
+// KEVIN_NIGHT_WAKE_MS without a touch. Face-down sleep and an update still win. 0 = off.
+#define KEVIN_NIGHT_MODE    1
+#define KEVIN_NIGHT_START   22
+#define KEVIN_NIGHT_END     6
+#define KEVIN_NIGHT_BRIGHT  15
+#define KEVIN_NIGHT_WAKE_MS 30000UL
 
 // ---------- Home location ----------
 // A PLACEHOLDER, and deliberately not a place. The device has exactly two location inputs

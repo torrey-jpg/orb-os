@@ -843,9 +843,25 @@ static void rtc_seed_clock() {
 static bool g_asleep = false;   // face-down
 static bool g_idle   = false;   // no touch for a while
 static bool g_updateBright = false;   // an update surface is up (update_ui)
+static bool g_night  = false;   // Kevin's Orb: night hours and untouched for a while
+// Kevin's Orb: is it night? Hours from KEVIN_NIGHT_START up to KEVIN_NIGHT_END, across
+// midnight when START > END. False while the clock is not yet set: an Orb that does not know
+// the time should not guess that it is the middle of the night.
+static bool kevin_night_hours() {
+#if KEVIN_NIGHT_MODE
+    struct tm t;
+    if (!orb_local_time(&t)) return false;
+    const int h = t.tm_hour;
+    return KEVIN_NIGHT_START > KEVIN_NIGHT_END ? (h >= KEVIN_NIGHT_START || h < KEVIN_NIGHT_END)
+                                               : (h >= KEVIN_NIGHT_START && h < KEVIN_NIGHT_END);
+#else
+    return false;
+#endif
+}
 static void applyBrightness() {
     int b = g_brightnessDay;
     if (g_idle  && BRIGHTNESS_IDLE  < b) b = BRIGHTNESS_IDLE;   // idle only dims down
+    if (g_night && KEVIN_NIGHT_BRIGHT < b) b = KEVIN_NIGHT_BRIGHT;   // night only dims down too
     if (g_asleep) b = 0;                                         // face-down -> screen off
     if (g_updateBright) b = 255;                                 // an update outranks both
     display::setBrightness(b);
@@ -3701,7 +3717,7 @@ void loop() {
             // wake the dimmed screen while a rock did; whatever the panel was doing with the
             // deferred write, the knob is the one thing that must never fail to wake it, so
             // the brightness goes back on the same loop as the detent.
-            if (g_idle) { g_idle = false; applyBrightness(); }
+            if (g_idle || g_night) { g_idle = false; g_night = false; applyBrightness(); }
         }
         if (pressed) diag::log("push (app %s, browsing=%d, captured=%d)",
                                app_shell::name(), app_shell::browsing(), app_shell::captured());
@@ -4081,8 +4097,9 @@ void loop() {
         lastMotion = millis();
         if (imu_motion() > 0) {
             display::noteActivity();
-            if (g_idle) {
+            if (g_idle || g_night) {
                 g_idle = false;
+                g_night = false;
                 applyBrightness();
                 Serial.println("[imu] motion woke the screen");
             }
@@ -4099,9 +4116,13 @@ void loop() {
         else if (fd == 0) fdCount = 0;              // -1 (I2C hiccup): leave the counter as-is
         const bool sleep = (fdCount >= 4);   // ~1.6 s face-down
         const bool idle  = g_idleDimMs > 0 && display::inactiveMs() > g_idleDimMs;
-        if (sleep != g_asleep || idle != g_idle) {
+        // Kevin's Orb: night hours, and nobody has touched it for the last little while.
+        const bool night = kevin_night_hours() && display::inactiveMs() > KEVIN_NIGHT_WAKE_MS;
+        if (sleep != g_asleep || idle != g_idle || night != g_night) {
+            if (night != g_night) Serial.printf("[night] %s\n", night ? "dimming for the night" : "full brightness");
             g_asleep = sleep;
             g_idle = idle;
+            g_night = night;
             applyBrightness();
         }
     }
