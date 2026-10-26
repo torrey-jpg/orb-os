@@ -62,6 +62,7 @@
 #include "tooth_view.h"   // Kevin's Orb
 #include "screensaver.h"  // Kevin's Orb
 #include "fact_view.h"    // Kevin's Orb
+#include "scores_view.h"  // Kevin's Orb
 #include "daily_card.h"   // Kevin's Orb
 #include "ticker_view.h"
 #include "ticker.h"              // world headlines, read through the gateway
@@ -204,6 +205,7 @@ static volatile bool         g_wxAnimDirty = false;      // new Weather app: fra
 static volatile bool         g_cloudImageDirty = false;
 static volatile bool         g_intelDirty = false;      // headlines: a fresh set is in the store
 static volatile bool         g_tickerDirty = false;     // quotes: a fresh set is in the store
+static volatile bool         g_scoresDirty = false;     // Kevin's Orb: football scores are in the store
 
 // Web-selectable time zones (label + POSIX TZ). The <option> value is the index; the save
 // handler maps it back to the POSIX string stored in NVS and used by configTzTime at boot.
@@ -597,6 +599,11 @@ static void adsb_task(void*) {
             char wantHex[10];
             if (photo_pending(wantHex, sizeof(wantHex))) photo_fetch(wantHex);
         }
+        // Kevin's Orb: football scores. Outside the WiFi branch on purpose, so a screen that is
+        // up with no WiFi says "No Wi-Fi" instead of waiting forever. Fetches only while the
+        // Scores screen is showing; fetchStep() owns its own timing and returns immediately
+        // when nothing is due.
+        if (scoresview::fetchStep()) g_scoresDirty = true;
         vTaskDelay(pdMS_TO_TICKS(250));
     }
 }
@@ -2958,6 +2965,11 @@ void setup() {
     app_shell::addLazy("Dental Fact", factview::build, factview::destroy,
                        factview::onPress, factview::onTurn, false,
                        factview::onEnter, factview::onExit, false);
+    // Kevin's Orb: Football Scores. A turn steps through games, a push refreshes. Fetches
+    // only while it is up (scoresview::fetchStep, on the network task).
+    app_shell::addLazy("Scores", scoresview::build, scoresview::destroy,
+                       scoresview::onPress, scoresview::onTurn, false,
+                       scoresview::onEnter, scoresview::onExit, false);
     app_shell::addLazy(theme_style::names().settings,
                        settingsview::build, settingsview::destroy,
                        settingsview::onPress, settingsview::onTurn,
@@ -3832,6 +3844,10 @@ void loop() {
     if (g_tickerDirty) {
         g_tickerDirty = false;
         tickerview::onQuotesReady();
+    }
+    if (g_scoresDirty) {   // Kevin's Orb: scores arrived on core 0; labels are core 1's to write
+        g_scoresDirty = false;
+        scoresview::onScoresReady();
     }
     // The curved strip is advanced from here rather than from a timer of its own, so it
     // moves on the same clock as everything else the display does and cannot drift against

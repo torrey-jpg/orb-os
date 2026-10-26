@@ -98,6 +98,7 @@ namespace app_shell {
 #endif
         APP_TOOTH,      // Kevin's Orb: Tooth Explorer
         APP_FACTS,      // Kevin's Orb: Dental Fact of the Day
+        APP_SCORES,     // Kevin's Orb: Football Scores
         APP_SETTINGS,
         APP_COUNT,
     };

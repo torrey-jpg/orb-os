@@ -34,6 +34,7 @@
 #include "warp.h"         // Kevin's Orb
 #include "screensaver.h"  // Kevin's Orb
 #include "fact_view.h"    // Kevin's Orb
+#include "scores_view.h"  // Kevin's Orb
 #include "daily_card.h"   // Kevin's Orb
 #include "ticker_view.h"
 #include "ticker.h"
@@ -705,6 +706,9 @@ static void sim_register_apps(lv_obj_t *radarScreen) {
     app_shell::addLazy("Dental Fact", factview::build, factview::destroy,
                        factview::onPress, factview::onTurn, false,
                        factview::onEnter, factview::onExit, false);
+    app_shell::addLazy("Scores", scoresview::build, scoresview::destroy,
+                       scoresview::onPress, scoresview::onTurn, false,
+                       scoresview::onEnter, scoresview::onExit, false);
     app_shell::add(settingsview::screen(), theme_style::names().settings,
                    settingsview::onPress, settingsview::onTurn, true, settingsview::onEnter, settingsview::onExit, false);
     app_shell::verifySlots(settingsview::screen());   // same check the device runs, same reason
@@ -867,6 +871,10 @@ int main(int argc, char **argv) {
     // Kevin's Orb: --factshot <prefix> shows today's fact, then two days back, then today again.
     const char *factShot   = (argc >= 3 && strcmp(argv[1], "--factshot") == 0) ? argv[2] : NULL;
     int factStep = 0; uint32_t factAt = 0;
+    // Kevin's Orb: --scoreshot <prefix> opens Scores and photographs the first few games.
+    // Point SIM_SCORES_NFL / SIM_SCORES_CFB at saved ESPN replies to run it offline.
+    const char *scoreShot  = (argc >= 3 && strcmp(argv[1], "--scoreshot") == 0) ? argv[2] : NULL;
+    int scoreStep = 0; uint32_t scoreAt = 0;
     // Kevin's Orb: --dailyshot <prefix> (with SIM_DAILY=1): first touch -> fact card, push ->
     // joke setup, wait -> punchline, push -> closed, capturing each.
     const char *dailyShot  = (argc >= 3 && strcmp(argv[1], "--dailyshot") == 0) ? argv[2] : NULL;
@@ -1915,6 +1923,15 @@ int main(int argc, char **argv) {
                 if (intelview::fetchStep()) intelview::onHeadlinesReady();
             }
         }
+        // Kevin's Orb: the scores' fetch step, here for the same reason as the headlines'
+        // (the simulator has no network task). It does nothing unless Scores is on screen.
+        if (interactive || scoreShot) {
+            static Uint32 lastScores = 0;
+            if (now - lastScores > 400) {
+                lastScores = now;
+                if (scoresview::fetchStep()) scoresview::onScoresReady();
+            }
+        }
         lv_tick_inc(now - last);
         last = now;
         if (interactive) {                       // drive the app shell through the SAME path as the device
@@ -2355,6 +2372,20 @@ int main(int argc, char **argv) {
                 printf("[dailyshot] after close showing=%d app=%s\n", daily_card::showing(), app_shell::name());
                 input_router::dispatch(1, false);                 // a second touch: no card again today
                 printf("[dailyshot] second touch showing=%d\n", daily_card::showing());
+                run = false;
+            }
+        }
+        if (scoreShot) {
+            char path[300];
+            if (scoreStep == 0 && now - start > 9000) {
+                app_shell::selectApp(app_shell::APP_SCORES);
+                scoreStep = 1; scoreAt = now;
+            } else if (scoreStep >= 1 && scoreStep <= 8 && now - scoreAt > 1500) {
+                printf("[scoreshot] app=%s game=%d\n", app_shell::name(), scoresview::index() + 1);
+                snprintf(path, sizeof(path), "%s-%d.bmp", scoreShot, scoreStep); sim_save_frame(path);
+                input_router::dispatch(1, false);
+                ++scoreStep; scoreAt = now;
+            } else if (scoreStep > 8) {
                 run = false;
             }
         }
