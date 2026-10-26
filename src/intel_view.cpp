@@ -1216,7 +1216,12 @@ void intelview::init() {
     lv_obj_clear_flag(s_screen, LV_OBJ_FLAG_SCROLLABLE);
 
     s_title = lv_label_create(s_screen);
+#if KEVIN_NEWS_FOX
+    // Kevin's Orb: say whose news it is, unless a theme has named the screen itself.
+    lv_label_set_text(s_title, strcmp(cfg.title, "INTEL") ? cfg.title : "FOX NEWS");
+#else
     lv_label_set_text(s_title, cfg.title);
+#endif
     lv_obj_set_style_text_color(s_title, c_title(), 0);
     lv_obj_set_style_text_opa(s_title, (lv_opa_t)cfg.titleOpa, 0);
     lv_obj_set_style_text_font(s_title, slot_font(0, cfg.titleSize), 0);

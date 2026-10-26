@@ -85,7 +85,16 @@ static bool gateway_get(const char *url, const char *what, Payload &payload) {
     return true;
 }
 
+#if KEVIN_NEWS_FOX
+#include "news_fox.h"
+#endif
+
 bool intel_fetch(const char *topics, const char *source, int want, IntelSnapshot &out) {
+#if KEVIN_NEWS_FOX
+    // Kevin's Orb: Fox News, read straight from Fox's own feed. See news_fox.h.
+    (void)topics; (void)source;
+    return news_fox_fetch(want, out);
+#endif
     if (want < 1) want = 1;
     if (want > INTEL_MAX_ITEMS) want = INTEL_MAX_ITEMS;
     if (!topics || !*topics) topics = "general";
@@ -168,6 +177,10 @@ IntelBriefState intel_brief_fetch(const char *topics, const char *source, const 
                                   char *headlineOut, size_t headlineCap,
                                   char *sourceOut, size_t sourceCap,
                                   char *bodyOut, size_t bodyCap) {
+#if KEVIN_NEWS_FOX
+    (void)topics; (void)source;
+    return news_fox_brief(key, headlineOut, headlineCap, sourceOut, sourceCap, bodyOut, bodyCap);
+#endif
     if (headlineOut && headlineCap) headlineOut[0] = 0;
     if (sourceOut && sourceCap)     sourceOut[0] = 0;
     if (bodyOut && bodyCap)         bodyOut[0] = 0;

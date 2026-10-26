@@ -44,6 +44,9 @@
 #define KEVIN_WX_NAME "LUFKIN, TX"
 #define KEVIN_WX_LAT  31.3394
 #define KEVIN_WX_LON  (-94.7624)
+// Kevin's Orb: the News screen reads Fox News's own "latest" feed directly (news_fox.cpp)
+// instead of Zion's BBC/Guardian gateway. 0 puts the gateway back.
+#define KEVIN_NEWS_FOX 1
 
 // ---------- Home location ----------
 // A PLACEHOLDER, and deliberately not a place. The device has exactly two location inputs
