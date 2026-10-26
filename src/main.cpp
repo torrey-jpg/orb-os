@@ -64,6 +64,7 @@
 #include "fact_view.h"    // Kevin's Orb
 #include "scores_view.h"  // Kevin's Orb
 #include "kwx_view.h"     // Kevin's Orb
+#include "wedding_view.h" // Kevin's Orb
 #include "daily_card.h"   // Kevin's Orb
 #include "ticker_view.h"
 #include "ticker.h"              // world headlines, read through the gateway
@@ -2978,6 +2979,11 @@ void setup() {
     app_shell::addLazy("Weather", kwxview::build, kwxview::destroy,
                        kwxview::onPress, kwxview::onTurn, false,
                        kwxview::onEnter, kwxview::onExit, false);
+    // Kevin's Orb: Wedding countdown to May 29, 2027 (KEVIN_WEDDING_* in config.h). A turn
+    // changes how the time left is counted; offline, nothing fetched.
+    app_shell::addLazy("Wedding", weddingview::build, weddingview::destroy,
+                       weddingview::onPress, weddingview::onTurn, false,
+                       weddingview::onEnter, weddingview::onExit, false);
     app_shell::addLazy(theme_style::names().settings,
                        settingsview::build, settingsview::destroy,
                        settingsview::onPress, settingsview::onTurn,

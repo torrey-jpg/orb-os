@@ -1183,7 +1183,16 @@ const Menu &menu() { return s_menu; }
 const Settings &settings() { return s_settings; }
 const Intel &intel() { return s_intel; }
 const Splash &splash() { return s_splash; }
-const Apps &apps() { return s_apps; }
+const Apps &apps() {
+#if KEVIN_NO_FLIGHT
+    // Kevin's Orb: no Flight Tracker, whatever the compiled roster or a theme on the card
+    // says. Enforced here, where every reader asks, rather than where the roster is loaded.
+    // Off means it stays registered (so no other app's slot number moves) but is skipped in
+    // the menu, and the network task never polls for aircraft (main.cpp's radarActive).
+    s_apps.flight = false;
+#endif
+    return s_apps;
+}
 const Names &names() { return s_names; }
 
 void labelFor(const char *slug, char *out, size_t cap) {

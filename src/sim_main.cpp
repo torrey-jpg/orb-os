@@ -36,6 +36,7 @@
 #include "fact_view.h"    // Kevin's Orb
 #include "scores_view.h"  // Kevin's Orb
 #include "kwx_view.h"     // Kevin's Orb
+#include "wedding_view.h" // Kevin's Orb
 #include "daily_card.h"   // Kevin's Orb
 #include "ticker_view.h"
 #include "ticker.h"
@@ -713,6 +714,9 @@ static void sim_register_apps(lv_obj_t *radarScreen) {
     app_shell::addLazy("Weather", kwxview::build, kwxview::destroy,
                        kwxview::onPress, kwxview::onTurn, false,
                        kwxview::onEnter, kwxview::onExit, false);
+    app_shell::addLazy("Wedding", weddingview::build, weddingview::destroy,
+                       weddingview::onPress, weddingview::onTurn, false,
+                       weddingview::onEnter, weddingview::onExit, false);
     app_shell::add(settingsview::screen(), theme_style::names().settings,
                    settingsview::onPress, settingsview::onTurn, true, settingsview::onEnter, settingsview::onExit, false);
     app_shell::verifySlots(settingsview::screen());   // same check the device runs, same reason
@@ -883,6 +887,10 @@ int main(int argc, char **argv) {
     // again. SIM_KWX_FILE=/path/reply.json runs it from a saved Open-Meteo reply.
     const char *kwxShot = (argc >= 3 && strcmp(argv[1], "--kwxshot") == 0) ? argv[2] : NULL;
     int kwxStep = 0; uint32_t kwxAt = 0;
+    // Kevin's Orb: --weddingshot <prefix> opens the Wedding countdown and photographs each of
+    // its four counting modes. SIM_TODAY=YYYY-MM-DD pretends it is another day.
+    const char *weddingShot = (argc >= 3 && strcmp(argv[1], "--weddingshot") == 0) ? argv[2] : NULL;
+    int wedStep = 0; uint32_t wedAt = 0;
     // Kevin's Orb: --dailyshot <prefix> (with SIM_DAILY=1): first touch -> fact card, push ->
     // joke setup, wait -> punchline, push -> closed, capturing each.
     const char *dailyShot  = (argc >= 3 && strcmp(argv[1], "--dailyshot") == 0) ? argv[2] : NULL;
@@ -2381,6 +2389,20 @@ int main(int argc, char **argv) {
                 printf("[dailyshot] after close showing=%d app=%s\n", daily_card::showing(), app_shell::name());
                 input_router::dispatch(1, false);                 // a second touch: no card again today
                 printf("[dailyshot] second touch showing=%d\n", daily_card::showing());
+                run = false;
+            }
+        }
+        if (weddingShot) {
+            char path[300];
+            if (wedStep == 0 && now - start > 9000) {
+                app_shell::selectApp(app_shell::APP_WEDDING);
+                wedStep = 1; wedAt = now;
+            } else if (wedStep >= 1 && wedStep <= 4 && now - wedAt > 1200) {
+                printf("[weddingshot] app=%s days=%d\n", app_shell::name(), weddingview::daysToGo());
+                snprintf(path, sizeof(path), "%s-%d.bmp", weddingShot, wedStep); sim_save_frame(path);
+                input_router::dispatch(1, false);
+                ++wedStep; wedAt = now;
+            } else if (wedStep > 4) {
                 run = false;
             }
         }

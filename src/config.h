@@ -47,6 +47,14 @@
 // Kevin's Orb: the News screen reads Fox News's own "latest" feed directly (news_fox.cpp)
 // instead of Zion's BBC/Guardian gateway. 0 puts the gateway back.
 #define KEVIN_NEWS_FOX 1
+// Kevin's Orb: the Flight Tracker is switched off (hidden from the menu, no aircraft polling;
+// see theme_style.cpp). 0 brings it back.
+#define KEVIN_NO_FLIGHT 1
+// Kevin's Orb: the Wedding countdown (wedding_view.cpp). Kevin & Cayleigh, May 29, 2027.
+#define KEVIN_WEDDING_NAMES "KEVIN & CAYLEIGH"
+#define KEVIN_WEDDING_Y 2027
+#define KEVIN_WEDDING_M 5
+#define KEVIN_WEDDING_D 29
 
 // ---------- Home location ----------
 // A PLACEHOLDER, and deliberately not a place. The device has exactly two location inputs

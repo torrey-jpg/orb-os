@@ -100,6 +100,7 @@ namespace app_shell {
         APP_FACTS,      // Kevin's Orb: Dental Fact of the Day
         APP_SCORES,     // Kevin's Orb: Football Scores
         APP_KWX,        // Kevin's Orb: Weather (Lufkin)
+        APP_WEDDING,    // Kevin's Orb: Wedding countdown
         APP_SETTINGS,
         APP_COUNT,
     };
