@@ -35,6 +35,7 @@
 #include "screensaver.h"  // Kevin's Orb
 #include "fact_view.h"    // Kevin's Orb
 #include "scores_view.h"  // Kevin's Orb
+#include "kwx_view.h"     // Kevin's Orb
 #include "daily_card.h"   // Kevin's Orb
 #include "ticker_view.h"
 #include "ticker.h"
@@ -709,6 +710,9 @@ static void sim_register_apps(lv_obj_t *radarScreen) {
     app_shell::addLazy("Scores", scoresview::build, scoresview::destroy,
                        scoresview::onPress, scoresview::onTurn, false,
                        scoresview::onEnter, scoresview::onExit, false);
+    app_shell::addLazy("Weather", kwxview::build, kwxview::destroy,
+                       kwxview::onPress, kwxview::onTurn, false,
+                       kwxview::onEnter, kwxview::onExit, false);
     app_shell::add(settingsview::screen(), theme_style::names().settings,
                    settingsview::onPress, settingsview::onTurn, true, settingsview::onEnter, settingsview::onExit, false);
     app_shell::verifySlots(settingsview::screen());   // same check the device runs, same reason
@@ -875,6 +879,10 @@ int main(int argc, char **argv) {
     // Point SIM_SCORES_NFL / SIM_SCORES_CFB at saved ESPN replies to run it offline.
     const char *scoreShot  = (argc >= 3 && strcmp(argv[1], "--scoreshot") == 0) ? argv[2] : NULL;
     int scoreStep = 0; uint32_t scoreAt = 0;
+    // Kevin's Orb: --kwxshot <prefix> opens Kevin's Weather, photographs it, slides the hours,
+    // again. SIM_KWX_FILE=/path/reply.json runs it from a saved Open-Meteo reply.
+    const char *kwxShot = (argc >= 3 && strcmp(argv[1], "--kwxshot") == 0) ? argv[2] : NULL;
+    int kwxStep = 0; uint32_t kwxAt = 0;
     // Kevin's Orb: --dailyshot <prefix> (with SIM_DAILY=1): first touch -> fact card, push ->
     // joke setup, wait -> punchline, push -> closed, capturing each.
     const char *dailyShot  = (argc >= 3 && strcmp(argv[1], "--dailyshot") == 0) ? argv[2] : NULL;
@@ -1925,11 +1933,12 @@ int main(int argc, char **argv) {
         }
         // Kevin's Orb: the scores' fetch step, here for the same reason as the headlines'
         // (the simulator has no network task). It does nothing unless Scores is on screen.
-        if (interactive || scoreShot) {
+        if (interactive || scoreShot || kwxShot) {
             static Uint32 lastScores = 0;
             if (now - lastScores > 400) {
                 lastScores = now;
                 if (scoresview::fetchStep()) scoresview::onScoresReady();
+                if (kwxview::fetchStep()) kwxview::onWeatherReady();
             }
         }
         lv_tick_inc(now - last);
@@ -2372,6 +2381,22 @@ int main(int argc, char **argv) {
                 printf("[dailyshot] after close showing=%d app=%s\n", daily_card::showing(), app_shell::name());
                 input_router::dispatch(1, false);                 // a second touch: no card again today
                 printf("[dailyshot] second touch showing=%d\n", daily_card::showing());
+                run = false;
+            }
+        }
+        if (kwxShot) {
+            char path[300];
+            if (kwxStep == 0 && now - start > 9000) {
+                app_shell::selectApp(app_shell::APP_KWX);
+                kwxStep = 1; kwxAt = now;
+            } else if (kwxStep == 1 && now - kwxAt > 1500) {
+                printf("[kwxshot] app=%s\n", app_shell::name());
+                snprintf(path, sizeof(path), "%s-1.bmp", kwxShot); sim_save_frame(path);
+                input_router::dispatch(1, false); input_router::dispatch(1, false); input_router::dispatch(1, false);
+                kwxStep = 2; kwxAt = now;
+            } else if (kwxStep == 2 && now - kwxAt > 800) {
+                printf("[kwxshot] hours slid to +%d\n", kwxview::hourOffset());
+                snprintf(path, sizeof(path), "%s-2.bmp", kwxShot); sim_save_frame(path);
                 run = false;
             }
         }

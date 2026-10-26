@@ -63,6 +63,7 @@
 #include "screensaver.h"  // Kevin's Orb
 #include "fact_view.h"    // Kevin's Orb
 #include "scores_view.h"  // Kevin's Orb
+#include "kwx_view.h"     // Kevin's Orb
 #include "daily_card.h"   // Kevin's Orb
 #include "ticker_view.h"
 #include "ticker.h"              // world headlines, read through the gateway
@@ -206,6 +207,7 @@ static volatile bool         g_cloudImageDirty = false;
 static volatile bool         g_intelDirty = false;      // headlines: a fresh set is in the store
 static volatile bool         g_tickerDirty = false;     // quotes: a fresh set is in the store
 static volatile bool         g_scoresDirty = false;     // Kevin's Orb: football scores are in the store
+static volatile bool         g_kwxDirty = false;        // Kevin's Orb: the Lufkin forecast is in the store
 
 // Web-selectable time zones (label + POSIX TZ). The <option> value is the index; the save
 // handler maps it back to the POSIX string stored in NVS and used by configTzTime at boot.
@@ -604,6 +606,7 @@ static void adsb_task(void*) {
         // Scores screen is showing; fetchStep() owns its own timing and returns immediately
         // when nothing is due.
         if (scoresview::fetchStep()) g_scoresDirty = true;
+        if (kwxview::fetchStep()) g_kwxDirty = true;   // Kevin's Orb: Weather, same rules
         vTaskDelay(pdMS_TO_TICKS(250));
     }
 }
@@ -2970,6 +2973,11 @@ void setup() {
     app_shell::addLazy("Scores", scoresview::build, scoresview::destroy,
                        scoresview::onPress, scoresview::onTurn, false,
                        scoresview::onEnter, scoresview::onExit, false);
+    // Kevin's Orb: Weather for Lufkin (KEVIN_WX_* in config.h). A turn slides the hours, a
+    // push refreshes. Fetches only while it is up (kwxview::fetchStep, on the network task).
+    app_shell::addLazy("Weather", kwxview::build, kwxview::destroy,
+                       kwxview::onPress, kwxview::onTurn, false,
+                       kwxview::onEnter, kwxview::onExit, false);
     app_shell::addLazy(theme_style::names().settings,
                        settingsview::build, settingsview::destroy,
                        settingsview::onPress, settingsview::onTurn,
@@ -3848,6 +3856,10 @@ void loop() {
     if (g_scoresDirty) {   // Kevin's Orb: scores arrived on core 0; labels are core 1's to write
         g_scoresDirty = false;
         scoresview::onScoresReady();
+    }
+    if (g_kwxDirty) {      // Kevin's Orb: the forecast arrived on core 0
+        g_kwxDirty = false;
+        kwxview::onWeatherReady();
     }
     // The curved strip is advanced from here rather than from a timer of its own, so it
     // moves on the same clock as everything else the display does and cannot drift against

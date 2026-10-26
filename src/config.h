@@ -38,6 +38,12 @@
 // Kevin's Orb: boot with "Good morning, Dr. Hollar" (greeting.cpp) instead of the stock
 // "THE ORB" title card. 0 brings Zion's title card back.
 #define KEVIN_GREETING 1
+// Kevin's Orb: the Weather screen's town. Lufkin, TX 75915: 31.339412, -94.762353
+// (findlatitudeandlongitude.com, checked 2026-10-25). Open-Meteo's grid is a few km, so
+// the town centre is all the precision a forecast can use.
+#define KEVIN_WX_NAME "LUFKIN, TX"
+#define KEVIN_WX_LAT  31.3394
+#define KEVIN_WX_LON  (-94.7624)
 
 // ---------- Home location ----------
 // A PLACEHOLDER, and deliberately not a place. The device has exactly two location inputs
