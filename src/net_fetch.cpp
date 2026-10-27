@@ -107,6 +107,87 @@ bool net_fetch_psram(const char *url, const char *userAgent,
     return true;
 }
 
+// ---- Kevin's Orb: POST (see net_fetch.h) -------------------------------------------------------
+bool net_post_psram(const char *url, const char *const *headers, int nHeaders,
+                    const uint8_t *body, size_t bodyLen,
+                    uint8_t **out, size_t *outLen, size_t maxLen,
+                    int connectTimeoutMs, int totalTimeoutMs, int *httpCode) {
+    *out = nullptr; *outLen = 0;
+    if (httpCode) *httpCode = 0;
+    if (WiFi.status() != WL_CONNECTED) return false;
+    const bool secure = !strncmp(url, "https://", 8);
+    WiFiClient plain;
+    std::unique_ptr<WiFiClientSecure> tls(secure ? new WiFiClientSecure() : nullptr);
+    if (tls) tls->setInsecure();              // hobby device (matches the other clients)
+    WiFiClient &cli = tls ? static_cast<WiFiClient &>(*tls) : plain;
+    HTTPClient http;
+    http.setReuse(false);
+    http.setConnectTimeout(connectTimeoutMs);
+    http.setTimeout(totalTimeoutMs);
+    if (!http.begin(cli, url)) return false;
+    for (int i = 0; i < nHeaders; ++i) {
+        const char *colon = strchr(headers[i], ':');
+        if (!colon) continue;
+        String name(headers[i]); name.remove(colon - headers[i]);
+        const char *v = colon + 1; while (*v == ' ') ++v;
+        http.addHeader(name, v);
+    }
+    const char *keep[] = { "Transfer-Encoding" };
+    http.collectHeaders(keep, 1);
+    const int code = http.POST((uint8_t *)body, bodyLen);
+    if (httpCode) *httpCode = code;
+    if (code <= 0) {
+        Serial.printf("[net] POST failed (%d) over %s: %s\n", code, secure ? "TLS" : "plain", url);
+        http.end(); return false;
+    }
+    const bool chunked = http.header("Transfer-Encoding").equalsIgnoreCase("chunked");
+    const int len = http.getSize();
+    WiFiClient *stream = http.getStreamPtr();
+    size_t cap = (len > 0 && (size_t)len < maxLen) ? (size_t)len : maxLen;
+    uint8_t *buf = (uint8_t *)heap_caps_malloc(cap ? cap : 1, MALLOC_CAP_SPIRAM);
+    if (!buf) { http.end(); return false; }
+    size_t got = 0;
+    uint32_t last = millis();
+    // Read exactly n bytes (or until the time runs out / the connection closes).
+    auto readN = [&](size_t n) {
+        while (n && got < cap && (millis() - last) < (uint32_t)totalTimeoutMs) {
+            const size_t avail = stream->available();
+            if (avail) {
+                size_t want = n < avail ? n : avail;
+                if (want > cap - got) want = cap - got;
+                const int r = stream->readBytes(buf + got, want);
+                if (r > 0) { got += r; n -= r; last = millis(); }
+            } else if (!stream->connected()) {
+                break;
+            } else {
+                delay(2);
+            }
+        }
+        return n == 0;
+    };
+    if (chunked) {
+        // HTTPClient leaves the chunk framing in the stream: hex size line, data, CRLF.
+        for (;;) {
+            String line = stream->readStringUntil('\n');
+            line.trim();
+            if (!line.length()) { if (!stream->connected() && !stream->available()) break; continue; }
+            const size_t n = (size_t)strtoul(line.c_str(), nullptr, 16);
+            if (n == 0) break;
+            if (!readN(n)) break;
+            stream->readStringUntil('\n');       // the CRLF after the data
+            if (got >= cap) break;
+        }
+    } else if (len > 0) {
+        readN(cap);
+    } else {
+        readN(cap);                               // no length: until the server closes
+    }
+    http.end();
+    *out = buf; *outLen = got;
+    if (code != 200) Serial.printf("[net] POST HTTP %d (%u bytes back): %s\n", code, (unsigned)got, url);
+    return code == 200 && got > 0;
+}
+
 #else
 // Desktop/native build: no PSRAM, no fragmented-heap concerns — a single libcurl GET
 // straight into a malloc'd buffer covers it. The maxLen cap is preserved so a runaway
@@ -155,5 +236,45 @@ bool net_fetch_psram(const char *url, const char *userAgent,
     }
     *out = buf.data; *outLen = buf.len;
     return true;
+}
+
+// Kevin's Orb: POST, the same contract as the device's (see net_fetch.h).
+bool net_post_psram(const char *url, const char *const *headers, int nHeaders,
+                    const uint8_t *body, size_t bodyLen,
+                    uint8_t **out, size_t *outLen, size_t maxLen,
+                    int connectTimeoutMs, int totalTimeoutMs, int *httpCode) {
+    *out = nullptr; *outLen = 0;
+    if (httpCode) *httpCode = 0;
+    CURL *curl = curl_easy_init();
+    if (!curl) return false;
+    NetBuf buf = { (uint8_t *)malloc(maxLen), 0, maxLen };
+    if (!buf.data) { curl_easy_cleanup(curl); return false; }
+    struct curl_slist *hl = nullptr;
+    for (int i = 0; i < nHeaders; ++i) hl = curl_slist_append(hl, headers[i]);
+    hl = curl_slist_append(hl, "Expect:");    // no 100-continue round trip
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hl);
+    curl_easy_setopt(curl, CURLOPT_POST, 1L);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (const char *)body);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)bodyLen);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buf);
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, (long)connectTimeoutMs);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, (long)totalTimeoutMs);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+    const CURLcode res = curl_easy_perform(curl);
+    long code = 0;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &code);
+    curl_easy_cleanup(curl);
+    curl_slist_free_all(hl);
+    if (httpCode) *httpCode = (int)code;
+    if (res != CURLE_OK) {
+        fprintf(stderr, "[net] POST failed (curl: %s) %s\n", curl_easy_strerror(res), url);
+        free(buf.data);
+        return false;
+    }
+    *out = buf.data; *outLen = buf.len;
+    if (code != 200) fprintf(stderr, "[net] POST HTTP %ld (%u bytes back): %s\n", code, (unsigned)buf.len, url);
+    return code == 200 && buf.len > 0;
 }
 #endif

@@ -15,6 +15,7 @@
 #include "chime_westminster.h"
 #include <SD.h>
 #include "theme_sd.h"
+#include "es7210.h"     // Kevin's Orb: the microphones (Assistant)
 
 #define ES8311_ADDR   0x18
 #define SR            16000          // playback sample rate (a beep; pitch-tolerant)
@@ -45,6 +46,12 @@ static volatile float s_trimGain = 1.0f;
 static volatile bool s_muted = false;
 static volatile int  s_cue = -1;
 static SemaphoreHandle_t s_sem = nullptr;
+// Kevin's Orb: held by the playback task for each sound, by the microphone for each read, and
+// by audio_mic_enable() while it rebuilds the I2S driver, so the driver is never torn down
+// under a write or a read.
+static SemaphoreHandle_t s_i2sLock = nullptr;
+static volatile bool     s_micOn = false;    // I2S is in send+receive and the ES7210 is running
+static bool              s_es7210Ready = false;
 
 // Named chime library: real recorded audio baked into flash (see chime_westminster.h),
 // not synthesized. Add more entries here as more chime files get baked in the same way.
@@ -158,9 +165,14 @@ static void es8311_init() {
     es_update(0x31, 0x9F, 0x00);          // unmute DAC
 }
 
-static bool i2s_setup() {
+static bool i2s_setup(bool withMic = false) {
     i2s_config_t cfg = {};
-    cfg.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX);
+    // Kevin's Orb: with the microphones on, the same port also receives. The ES7210 shares
+    // the codec's clocks (MCLK 42, BCLK 9, WS 45; Waveshare's BSP for this board) and sends
+    // on PIN_I2S_DIN. Receive costs a second set of DMA buffers in internal RAM, so it is
+    // only switched on while the Assistant is in use (audio_mic_enable).
+    cfg.mode = withMic ? (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX | I2S_MODE_RX)
+                       : (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX);
     cfg.sample_rate = SR;
     cfg.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;
     cfg.channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT;       // stereo
@@ -180,7 +192,7 @@ static bool i2s_setup() {
     pins.bck_io_num   = PIN_I2S_BCLK;
     pins.ws_io_num    = PIN_I2S_LRCLK;
     pins.data_out_num = PIN_I2S_DOUT;
-    pins.data_in_num  = I2S_PIN_NO_CHANGE;
+    pins.data_in_num  = withMic ? PIN_I2S_DIN : I2S_PIN_NO_CHANGE;
     if (i2s_set_pin(I2S_PORT, &pins) != ESP_OK) { i2s_driver_uninstall(I2S_PORT); return false; }
     i2s_zero_dma_buffer(I2S_PORT);
     return true;
@@ -326,7 +338,9 @@ static void audio_task(void *) {
         // honouring that token would replay a sound whose turn has passed. One playback per
         // burst, and it is always the latest.
         while (xSemaphoreTake(s_sem, 0) == pdTRUE) { }
+        if (s_i2sLock) xSemaphoreTake(s_i2sLock, portMAX_DELAY);
         play_cue(s_cue);
+        if (s_i2sLock) xSemaphoreGive(s_i2sLock);
     }
 }
 
@@ -359,6 +373,7 @@ bool audio_begin() {
         return false;
     }
     s_sem = xSemaphoreCreateBinary();
+    s_i2sLock = xSemaphoreCreateMutex();
     // 2048, not 4096. Measured with uxTaskGetStackHighWaterMark on the device: this task
     // never came within 3,276 bytes of filling its 4 KB, i.e. it uses about 820 B. The other
     // 3 KB sat reserved in INTERNAL RAM, which is the memory the networking stack starves
@@ -465,4 +480,71 @@ void audio_preview_chime(int idx) {   // ignores mute, like audio_selftest() —
     s_cue = 4;
     ++s_gen;
     if (s_sem) xSemaphoreGive(s_sem);
+}
+
+
+// ---- Kevin's Orb: the microphones ------------------------------------------------------------
+// The ES7210 (I2C 0x40) is set up the way Waveshare's examples set it up: slave, standard I2S,
+// 16-bit, 16 kHz, MIC1 and MIC2 at 24 dB (Waveshare's CODEC_DEFAULT_ADC_VOLUME for this board).
+// MIC3 carries the speaker's own signal as an echo reference and is left off. The ADC needs
+// the I2S clocks running, which they are whenever the driver is installed.
+static bool es7210_setup() {
+    if (s_es7210Ready) return true;
+    Wire.beginTransmission(0x40);
+    if (Wire.endTransmission() != 0) { Serial.println("[mic] ES7210 not found at 0x40"); return false; }
+    audio_hal_codec_config_t cfg = {};
+    cfg.adc_input  = AUDIO_HAL_ADC_INPUT_ALL;
+    cfg.codec_mode = AUDIO_HAL_CODEC_MODE_ENCODE;
+    cfg.i2s_iface.mode    = AUDIO_HAL_MODE_SLAVE;
+    cfg.i2s_iface.fmt     = AUDIO_HAL_I2S_NORMAL;
+    cfg.i2s_iface.samples = AUDIO_HAL_16K_SAMPLES;
+    cfg.i2s_iface.bits    = AUDIO_HAL_BIT_LENGTH_16BITS;
+    es7210_adc_init(&Wire, &cfg);
+    es7210_adc_config_i2s(cfg.codec_mode, &cfg.i2s_iface);
+    es7210_mic_select((es7210_input_mics_t)(ES7210_INPUT_MIC1 | ES7210_INPUT_MIC2));
+    es7210_adc_set_gain((es7210_input_mics_t)(ES7210_INPUT_MIC1 | ES7210_INPUT_MIC2), GAIN_24DB);
+    es7210_adc_ctrl_state(cfg.codec_mode, AUDIO_HAL_CTRL_START);
+    s_es7210Ready = true;
+    Serial.println("[mic] ES7210 ready");
+    return true;
+}
+
+bool audio_mic_enable(bool on) {
+    if (!s_ok || !s_i2sLock) return false;
+    if (on == s_micOn) return true;
+    ++s_gen;                                           // ask anything playing to stop
+    if (xSemaphoreTake(s_i2sLock, pdMS_TO_TICKS(2000)) != pdTRUE) return false;
+    i2s_driver_uninstall(I2S_PORT);
+    bool ok = i2s_setup(on);
+    if (!ok && on) ok = i2s_setup(false);              // could not add receive: keep the speaker
+    const bool micOk = ok && on;
+    s_micOn = micOk;
+    xSemaphoreGive(s_i2sLock);
+    if (micOk && !es7210_setup()) { audio_mic_enable(false); return false; }
+    if (micOk) es7210_adc_ctrl_state(AUDIO_HAL_CODEC_MODE_ENCODE, AUDIO_HAL_CTRL_START);
+    else if (s_es7210Ready) es7210_adc_ctrl_state(AUDIO_HAL_CODEC_MODE_ENCODE, AUDIO_HAL_CTRL_STOP);
+    Serial.printf("[mic] %s\n", micOk ? "on" : "off");
+    return on ? micOk : ok;
+}
+
+bool audio_mic_on() { return s_micOn; }
+
+// 16 kHz mono from MIC1 (the left slot). Returns how many samples were written.
+int audio_mic_read(int16_t *out, int maxSamples, int timeoutMs) {
+    if (!s_micOn || !out || maxSamples <= 0) return 0;
+    static int16_t frame[256 * 2];                     // stereo frames, read in small pieces
+    int got = 0;
+    if (xSemaphoreTake(s_i2sLock, pdMS_TO_TICKS(timeoutMs)) != pdTRUE) return 0;
+    while (got < maxSamples) {
+        int want = maxSamples - got;
+        if (want > 256) want = 256;
+        size_t br = 0;
+        if (i2s_read(I2S_PORT, frame, (size_t)want * 4, &br, pdMS_TO_TICKS(timeoutMs)) != ESP_OK || br == 0) break;
+        const int n = (int)(br / 4);
+        for (int i = 0; i < n; ++i) out[got + i] = frame[i * 2];
+        got += n;
+        if (n < want) break;
+    }
+    xSemaphoreGive(s_i2sLock);
+    return got;
 }

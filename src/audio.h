@@ -74,3 +74,14 @@ const char *audio_chime_name(int idx);    // display name, bounds-checked
 int         audio_chime_index();          // currently selected chime
 void        audio_set_chime(int idx);     // select active chime (caller persists the index)
 void        audio_preview_chime(int idx); // play a specific chime once, ignoring mute (picker UI)
+
+// ---- Kevin's Orb: the microphones (ES7210), for the Assistant --------------------------------
+// Off by default: receiving needs a second set of I2S DMA buffers in internal RAM, so the
+// Assistant switches the microphones on when it starts listening and off when it is left.
+// While on, the speaker still plays as before. Device only.
+bool audio_mic_enable(bool on);
+bool audio_mic_on();
+// Up to maxSamples of 16 kHz, 16-bit mono speech (MIC1). Blocks up to timeoutMs. Returns the
+// number of samples read; 0 if the microphones are off or nothing came.
+int  audio_mic_read(int16_t *out, int maxSamples, int timeoutMs);
+

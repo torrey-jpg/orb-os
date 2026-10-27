@@ -37,6 +37,8 @@
 #include "scores_view.h"  // Kevin's Orb
 #include "kwx_view.h"     // Kevin's Orb
 #include "wedding_view.h" // Kevin's Orb
+#include "assistant_view.h" // Kevin's Orb
+#include "assistant.h"      // Kevin's Orb
 #include "daily_card.h"   // Kevin's Orb
 #include "ticker_view.h"
 #include "ticker.h"
@@ -717,6 +719,9 @@ static void sim_register_apps(lv_obj_t *radarScreen) {
     app_shell::addLazy("Wedding", weddingview::build, weddingview::destroy,
                        weddingview::onPress, weddingview::onTurn, false,
                        weddingview::onEnter, weddingview::onExit, false);
+    app_shell::addLazy("Assistant", assistview::build, assistview::destroy,
+                       assistview::onPress, assistview::onTurn, false,
+                       assistview::onEnter, assistview::onExit, false);
     app_shell::add(settingsview::screen(), theme_style::names().settings,
                    settingsview::onPress, settingsview::onTurn, true, settingsview::onEnter, settingsview::onExit, false);
     app_shell::verifySlots(settingsview::screen());   // same check the device runs, same reason
@@ -891,6 +896,11 @@ int main(int argc, char **argv) {
     // its four counting modes. SIM_TODAY=YYYY-MM-DD pretends it is another day.
     const char *weddingShot = (argc >= 3 && strcmp(argv[1], "--weddingshot") == 0) ? argv[2] : NULL;
     int wedStep = 0; uint32_t wedAt = 0;
+    // Kevin's Orb: --askshot <prefix> opens the Assistant, asks one question (SIM_ASK_WAV=a
+    // recorded question, or SIM_ASSIST_MOCK=1 for canned answers with no network), prints
+    // what it heard and answered, and photographs each stage.
+    const char *askShot = (argc >= 3 && strcmp(argv[1], "--askshot") == 0) ? argv[2] : NULL;
+    int askStep = 0; uint32_t askAt = 0; int askLast = -1; int askShots = 0;
     // Kevin's Orb: --dailyshot <prefix> (with SIM_DAILY=1): first touch -> fact card, push ->
     // joke setup, wait -> punchline, push -> closed, capturing each.
     const char *dailyShot  = (argc >= 3 && strcmp(argv[1], "--dailyshot") == 0) ? argv[2] : NULL;
@@ -1941,6 +1951,15 @@ int main(int argc, char **argv) {
         }
         // Kevin's Orb: the scores' fetch step, here for the same reason as the headlines'
         // (the simulator has no network task). It does nothing unless Scores is on screen.
+        // Kevin's Orb: the Assistant's stages, every 100 ms (it only does anything while its
+        // screen is up). The device runs this on its network task.
+        if (interactive || askShot) {
+            static Uint32 lastAssist = 0;
+            if (now - lastAssist > 100) {
+                lastAssist = now;
+                if (assistview::fetchStep()) assistview::onReady();
+            }
+        }
         if (interactive || scoreShot || kwxShot) {
             static Uint32 lastScores = 0;
             if (now - lastScores > 400) {
@@ -2390,6 +2409,33 @@ int main(int argc, char **argv) {
                 input_router::dispatch(1, false);                 // a second touch: no card again today
                 printf("[dailyshot] second touch showing=%d\n", daily_card::showing());
                 run = false;
+            }
+        }
+        if (askShot) {
+            char path[300];
+            if (askStep == 0 && now - start > 9000) {
+                app_shell::selectApp(app_shell::APP_ASSIST);
+                askStep = 1; askAt = now;
+            } else if (askStep == 1 && now - askAt > 1200) {
+                snprintf(path, sizeof(path), "%s-0.bmp", askShot); sim_save_frame(path);
+                assist_push();
+                askStep = 2; askAt = now;
+            } else if (askStep == 2) {
+                const int st = (int)assist_state();
+                static uint32_t seenAt = 0; static int seen = -1;
+                if (st != seen) { seen = st; seenAt = now; }
+                if (st != askLast && now - seenAt > 300) {      // let the screen redraw first
+                    askLast = st; askAt = now;
+                    printf("[askshot] state %d\n", st);
+                    snprintf(path, sizeof(path), "%s-%d.bmp", askShot, ++askShots); sim_save_frame(path);
+                    if (st == AS_ANSWERED || st == AS_ERROR || st == AS_NOKEY) {
+                        char q[400], a[1200], e[160];
+                        assist_texts(q, sizeof q, a, sizeof a, e, sizeof e);
+                        printf("[askshot] heard:  %s\n[askshot] answer: %s\n[askshot] error:  %s\n", q, a, e);
+                        run = false;
+                    }
+                }
+                if (now - askAt > 120000) { printf("[askshot] timed out\n"); run = false; }
             }
         }
         if (weddingShot) {

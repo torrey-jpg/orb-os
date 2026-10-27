@@ -101,6 +101,7 @@ namespace app_shell {
         APP_SCORES,     // Kevin's Orb: Football Scores
         APP_KWX,        // Kevin's Orb: Weather (Lufkin)
         APP_WEDDING,    // Kevin's Orb: Wedding countdown
+        APP_ASSIST,     // Kevin's Orb: voice Assistant (OpenAI)
         APP_SETTINGS,
         APP_COUNT,
     };

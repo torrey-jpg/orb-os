@@ -65,6 +65,7 @@
 #include "scores_view.h"  // Kevin's Orb
 #include "kwx_view.h"     // Kevin's Orb
 #include "wedding_view.h" // Kevin's Orb
+#include "assistant_view.h" // Kevin's Orb
 #include "daily_card.h"   // Kevin's Orb
 #include "ticker_view.h"
 #include "ticker.h"              // world headlines, read through the gateway
@@ -209,6 +210,7 @@ static volatile bool         g_intelDirty = false;      // headlines: a fresh se
 static volatile bool         g_tickerDirty = false;     // quotes: a fresh set is in the store
 static volatile bool         g_scoresDirty = false;     // Kevin's Orb: football scores are in the store
 static volatile bool         g_kwxDirty = false;        // Kevin's Orb: the Lufkin forecast is in the store
+static volatile bool         g_assistDirty = false;     // Kevin's Orb: the Assistant moved on a stage
 
 // Web-selectable time zones (label + POSIX TZ). The <option> value is the index; the save
 // handler maps it back to the POSIX string stored in NVS and used by configTzTime at boot.
@@ -608,6 +610,9 @@ static void adsb_task(void*) {
         // when nothing is due.
         if (scoresview::fetchStep()) g_scoresDirty = true;
         if (kwxview::fetchStep()) g_kwxDirty = true;   // Kevin's Orb: Weather, same rules
+        // Kevin's Orb: the Assistant. One stage per pass (record, transcribe, answer, voice), and
+        // it owns the microphone and its buffers, so they are switched on and given back here too.
+        if (assistview::fetchStep()) g_assistDirty = true;
         vTaskDelay(pdMS_TO_TICKS(250));
     }
 }
@@ -3000,6 +3005,11 @@ void setup() {
     app_shell::addLazy("Wedding", weddingview::build, weddingview::destroy,
                        weddingview::onPress, weddingview::onTurn, false,
                        weddingview::onEnter, weddingview::onExit, false);
+    // Kevin's Orb: the voice Assistant (OpenAI; key in src/secrets.h). Push to talk; the work
+    // is done on the network task (assistview::fetchStep).
+    app_shell::addLazy("Assistant", assistview::build, assistview::destroy,
+                       assistview::onPress, assistview::onTurn, false,
+                       assistview::onEnter, assistview::onExit, false);
     app_shell::addLazy(theme_style::names().settings,
                        settingsview::build, settingsview::destroy,
                        settingsview::onPress, settingsview::onTurn,
@@ -3882,6 +3892,10 @@ void loop() {
     if (g_kwxDirty) {      // Kevin's Orb: the forecast arrived on core 0
         g_kwxDirty = false;
         kwxview::onWeatherReady();
+    }
+    if (g_assistDirty) {   // Kevin's Orb: the Assistant moved on a stage
+        g_assistDirty = false;
+        assistview::onReady();
     }
     // The curved strip is advanced from here rather than from a timer of its own, so it
     // moves on the same clock as everything else the display does and cannot drift against
