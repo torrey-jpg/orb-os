@@ -14,6 +14,23 @@ int daily_text::indexFor(const struct tm &t) {
     return i < 0 ? 0 : (i >= DAYS ? DAYS - 1 : i);
 }
 
+int daily_text::countLines(const char *path) {
+    size_t len = 0;
+    uint8_t *buf = theme_sd::read_whole(path, len, FILE_MAX);
+    if (!buf) return 0;
+    const char *p = (const char *)buf, *end = p + len;
+    int n = 0;
+    while (p < end) {
+        const char *nl = (const char *)memchr(p, '\n', (size_t)(end - p));
+        const char *e = nl ? nl : end;
+        if (e > p && e[-1] == '\r') --e;
+        if (e > p && *p != '#') ++n;
+        p = nl ? nl + 1 : end;
+    }
+    theme_sd::free(buf);
+    return n;
+}
+
 bool daily_text::lineFor(const char *path, int index, char *out, size_t cap) {
     if (!out || cap == 0) return false;
     out[0] = '\0';

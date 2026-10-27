@@ -2,6 +2,7 @@
 #include "daily_card.h"
 #include "app_shell.h"
 #include "daily_text.h"
+#include "config.h"
 #include "orb_time.h"
 #include "warp.h"
 #include <lvgl.h>
@@ -24,6 +25,7 @@ const uint32_t COL_HINT   = 0x5C5C5C;
 
 const char *FACTS = "/facts/dental_facts.txt";
 const char *JOKES = "/facts/dental_jokes.txt";
+const char *FAMILY_FILE = "/family/messages.txt";   // Torrey's notes; see KEVIN_FAMILY_* in config.h
 
 const uint32_t STAGE_MS  = 25000;   // each card waits this long before moving on by itself
 const uint32_t REVEAL_MS = 2500;    // the beat before the punchline
@@ -32,11 +34,14 @@ const char *DAYS_OF_WEEK[] = { "SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THUR
 const char *MONTHS[] = { "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY",
                          "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER" };
 
-enum Stage { NONE, FACT, JOKE, PUNCH };
+enum Stage { NONE, FACT, JOKE, PUNCH, FAMILY };
 Stage       s_stage = NONE;
 uint32_t    s_since = 0;
 int         s_lastDay = 0;          // yyyymmdd the card last showed
 bool        s_always  = false;      // simulator: SIM_DAILY=1
+long        s_famDay  = 0;          // day number the last note from Mom & Dad showed (0 = never)
+int         s_famIdx  = 0;          // which note comes next
+bool        s_famForce = false;     // simulator: SIM_FAMILY=1 shows one today regardless
 
 lv_obj_t   *s_root  = nullptr;
 lv_obj_t   *s_title = nullptr;
@@ -49,6 +54,7 @@ lv_timer_t *s_timer = nullptr;
 char s_fact[200];
 char s_setup[160];
 char s_punchText[120];
+char s_famText[300];                // today's note, empty when it is not a note day
 
 int ymd(const struct tm &t) { return (t.tm_year + 1900) * 10000 + (t.tm_mon + 1) * 100 + t.tm_mday; }
 
@@ -59,6 +65,36 @@ void save_day(int d) {
     if (p.begin("kevinorb", false)) { p.putInt("dailyDay", d); p.end(); }
 #else
     if (FILE *f = fopen("/tmp/orb_sim_daily", "w")) { fprintf(f, "%d\n", d); fclose(f); }
+#endif
+}
+
+// Days since 1970-01-01 for the local date (Howard Hinnant's days_from_civil).
+long day_number(const struct tm &t) {
+    int y = t.tm_year + 1900, m = t.tm_mon + 1, d = t.tm_mday;
+    y -= m <= 2;
+    const long era = (y >= 0 ? y : y - 399) / 400;
+    const unsigned yoe = (unsigned)(y - era * 400);
+    const unsigned doy = (153 * (m + (m > 2 ? -3 : 9)) + 2) / 5 + d - 1;
+    const unsigned doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    return era * 146097 + (long)doe - 719468;
+}
+
+void save_family(long day, int nextIdx) {
+    s_famDay = day; s_famIdx = nextIdx;
+#ifdef ARDUINO
+    Preferences p;
+    if (p.begin("kevinorb", false)) { p.putLong("famDay", (int32_t)day); p.putInt("famIdx", nextIdx); p.end(); }
+#else
+    if (FILE *f = fopen("/tmp/orb_sim_family", "w")) { fprintf(f, "%ld %d\n", day, nextIdx); fclose(f); }
+#endif
+}
+
+void load_family() {
+#ifdef ARDUINO
+    Preferences p;
+    if (p.begin("kevinorb", true)) { s_famDay = p.getLong("famDay", 0); s_famIdx = p.getInt("famIdx", 0); p.end(); }
+#else
+    if (FILE *f = fopen("/tmp/orb_sim_family", "r")) { if (fscanf(f, "%ld %d", &s_famDay, &s_famIdx) != 2) { s_famDay = 0; s_famIdx = 0; } fclose(f); }
 #endif
 }
 
@@ -102,7 +138,7 @@ void show_fact() {
     lv_label_set_text(s_body, s_fact);
     lv_obj_align(s_body, LV_ALIGN_CENTER, 0, 8);
     lv_obj_add_flag(s_punch, LV_OBJ_FLAG_HIDDEN);
-    lv_label_set_text(s_hint, s_setup[0] ? "push for today's joke" : "push to close");
+    lv_label_set_text(s_hint, s_setup[0] ? "push for today's joke" : s_famText[0] ? "push for a note from Mom & Dad" : "push to close");
 }
 
 void show_joke() {
@@ -124,19 +160,37 @@ void reveal() {
     lv_obj_update_layout(s_body);
     lv_obj_align_to(s_punch, s_body, LV_ALIGN_OUT_BOTTOM_MID, 0, 22);
     lv_obj_clear_flag(s_punch, LV_OBJ_FLAG_HIDDEN);
+    lv_label_set_text(s_hint, s_famText[0] ? "push for a note from Mom & Dad" : "push to close");
+}
+
+// Kevin's Orb: the note from Mom & Dad, after the joke on a note day.
+void show_family() {
+    s_stage = FAMILY;
+    s_since = lv_tick_get();
+    lv_label_set_text(s_title, "FROM MOM & DAD");
+    lv_obj_set_style_text_font(s_body, size_for(strlen(s_famText), true), 0);
+    lv_label_set_text(s_body, s_famText);
+    lv_obj_align(s_body, LV_ALIGN_CENTER, 0, -6);
+    lv_obj_set_style_text_font(s_punch, &lv_font_montserrat_22, 0);
+    lv_label_set_text(s_punch, KEVIN_FAMILY_SIGN);
+    lv_obj_update_layout(s_body);
+    lv_obj_align_to(s_punch, s_body, LV_ALIGN_OUT_BOTTOM_MID, 0, 24);
+    lv_obj_clear_flag(s_punch, LV_OBJ_FLAG_HIDDEN);
     lv_label_set_text(s_hint, "push to close");
+    printf("[daily] note from Mom & Dad: %s\n", s_famText);
 }
 
 void advance() {
-    if (s_stage == FACT)       { if (s_setup[0]) show_joke(); else close_card(); }
+    if (s_stage == FACT)       { if (s_setup[0]) show_joke(); else if (s_famText[0]) show_family(); else close_card(); }
     else if (s_stage == JOKE)  reveal();
+    else if (s_stage == PUNCH && s_famText[0]) show_family();
     else                       close_card();
 }
 
 void tick(lv_timer_t *) {
     const uint32_t t = lv_tick_get() - s_since;
     if (s_stage == JOKE && t >= REVEAL_MS) reveal();
-    else if ((s_stage == FACT || s_stage == PUNCH) && t >= STAGE_MS) advance();
+    else if ((s_stage == FACT || s_stage == PUNCH || s_stage == FAMILY) && t >= STAGE_MS) advance();
 }
 
 void touch_cb(lv_event_t *e) {
@@ -155,6 +209,19 @@ bool open_card(const struct tm &t) {
             snprintf(s_punchText, sizeof s_punchText, "%.119s", bar + 1);
         }
     }
+    // A note from Mom & Dad, when one is due: the next in turn, and from now on the clock
+    // for the next one starts today. Marked as shown here, when the card opens, because the
+    // card always reaches it (a push or its own timer moves it along).
+    s_famText[0] = '\0';
+#if KEVIN_FAMILY_EVERY > 0
+    const long today = day_number(t);
+    if (s_famForce || s_famDay == 0 || today - s_famDay >= KEVIN_FAMILY_EVERY) {
+        const int n = daily_text::countLines(FAMILY_FILE);
+        if (n > 0 && daily_text::lineFor(FAMILY_FILE, s_famIdx % n, s_famText, sizeof s_famText))
+            save_family(today, (s_famIdx + 1) % n);
+        s_famForce = false;
+    }
+#endif
 
     s_root = lv_obj_create(lv_layer_top());
     lv_obj_remove_style_all(s_root);
@@ -207,8 +274,10 @@ bool open_card(const struct tm &t) {
 void daily_card::begin() {
 #ifndef ARDUINO
     if (const char *e = getenv("SIM_DAILY")) s_always = atoi(e) != 0;
+    if (const char *e = getenv("SIM_FAMILY")) s_famForce = atoi(e) != 0;
 #endif
     load_day();
+    load_family();
 }
 
 bool daily_card::showing() { return s_stage != NONE; }

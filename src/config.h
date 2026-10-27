@@ -64,6 +64,13 @@
 #define KEVIN_NIGHT_END     6
 #define KEVIN_NIGHT_BRIGHT  15
 #define KEVIN_NIGHT_WAKE_MS 30000UL
+// Kevin's Orb: a note from Mom & Dad on the daily card, after the joke, once at least
+// KEVIN_FAMILY_EVERY days have passed since the last one (so a day he does not touch the Orb
+// is never missed, just moved). The notes are Torrey's, one per line, in
+// /family/messages.txt on the SD card (sim/sdcard/family/messages.txt on the Mac, which
+// .gitignore keeps off GitHub). They take turns in order. 0 = off.
+#define KEVIN_FAMILY_EVERY 3
+#define KEVIN_FAMILY_SIGN  "Love, Mom & Dad"
 
 // ---------- Home location ----------
 // A PLACEHOLDER, and deliberately not a place. The device has exactly two location inputs

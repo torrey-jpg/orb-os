@@ -18,4 +18,7 @@ namespace daily_text {
     // Copy line `index` (0-based, notes skipped) of `path` into `out`. False if the file is
     // missing or shorter than that.
     bool lineFor(const char *path, int index, char *out, size_t cap);
+
+    // How many lines `path` has, notes and blank lines skipped. 0 if it is missing.
+    int countLines(const char *path);
 }

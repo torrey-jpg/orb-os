@@ -2404,7 +2404,16 @@ int main(int argc, char **argv) {
                 dailyStep = 4; dailyAt = now;
             } else if (dailyStep == 4 && now - dailyAt > 2800) {
                 snprintf(path, sizeof(path), "%s-punch.bmp", dailyShot); sim_save_frame(path);
+                input_router::dispatch(0, true);                  // close (or, on a note day, the note)
+                if (daily_card::showing()) {                      // Kevin's Orb: a note from Mom & Dad
+                    dailyStep = 5; dailyAt = now;
+                }
+            } else if (dailyStep == 5 && now - dailyAt > 500) {
+                snprintf(path, sizeof(path), "%s-family.bmp", dailyShot); sim_save_frame(path);
                 input_router::dispatch(0, true);                  // close
+                dailyStep = 6;
+            }
+            if (dailyStep == 6 || (dailyStep == 4 && !daily_card::showing() && now - dailyAt > 2800)) {
                 printf("[dailyshot] after close showing=%d app=%s\n", daily_card::showing(), app_shell::name());
                 input_router::dispatch(1, false);                 // a second touch: no card again today
                 printf("[dailyshot] second touch showing=%d\n", daily_card::showing());
