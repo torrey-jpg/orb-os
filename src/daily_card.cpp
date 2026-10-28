@@ -6,6 +6,7 @@
 #include "orb_time.h"
 #include "warp.h"
 #include <lvgl.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,6 +27,17 @@ const uint32_t COL_HINT   = 0x5C5C5C;
 const char *FACTS = "/facts/dental_facts.txt";
 const char *JOKES = "/facts/dental_jokes.txt";
 const char *FAMILY_FILE = "/family/messages.txt";   // Torrey's notes; see KEVIN_FAMILY_* in config.h
+// Kevin's Orb: days that come round every year, each with its own page before the fact. One
+// line per day, "MM-DD|TITLE|message", in /family/special_days.txt (Torrey's; kept off
+// GitHub). National Dentist's Day (March 6, every year) is built in below, so it still comes
+// up if the file is missing; a line for 03-06 in the file replaces the built-in words.
+const char *SPECIAL_FILE = "/family/special_days.txt";
+struct Special { int month, day; const char *title, *message; };
+const Special BUILT_IN[] = {
+    { 3, 6, "HAPPY NATIONAL DENTIST'S DAY",
+      "Happy National Dentist's Day, Kevin! Every smile you care for is better because of you. We are so proud of you." },
+};
+const uint32_t COL_GOLD = 0xE6C27A;   // celebration gold: decoration only, the words say it all
 
 const uint32_t STAGE_MS  = 25000;   // each card waits this long before moving on by itself
 const uint32_t REVEAL_MS = 2500;    // the beat before the punchline
@@ -34,7 +46,7 @@ const char *DAYS_OF_WEEK[] = { "SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THUR
 const char *MONTHS[] = { "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY",
                          "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER" };
 
-enum Stage { NONE, FACT, JOKE, PUNCH, FAMILY };
+enum Stage { NONE, SPECIAL, FACT, JOKE, PUNCH, FAMILY };
 Stage       s_stage = NONE;
 uint32_t    s_since = 0;
 int         s_lastDay = 0;          // yyyymmdd the card last showed
@@ -55,6 +67,9 @@ char s_fact[200];
 char s_setup[160];
 char s_punchText[120];
 char s_famText[300];                // today's note, empty when it is not a note day
+char s_spTitle[64];                 // today's special day, empty on an ordinary day
+char s_spText[300];
+lv_obj_t *s_sparkle[12] = {};       // the gold sparkles round the special page
 
 int ymd(const struct tm &t) { return (t.tm_year + 1900) * 10000 + (t.tm_mon + 1) * 100 + t.tm_mday; }
 
@@ -123,14 +138,64 @@ lv_obj_t *label(const lv_font_t *font, uint32_t color, int y, int width) {
     return l;
 }
 
+void sparkles_off() {
+    for (lv_obj_t *&o : s_sparkle) if (o) { lv_anim_del(o, nullptr); lv_obj_del(o); o = nullptr; }
+}
+
+void sparkle_opa(void *o, int32_t v) { lv_obj_set_style_opa((lv_obj_t *)o, (lv_opa_t)v, 0); }
+
 void close_card() {
+    sparkles_off();
     if (s_timer) { lv_timer_del(s_timer); s_timer = nullptr; }
     if (s_root)  { lv_obj_del(s_root); s_root = nullptr; }
     s_title = s_sub = s_body = s_punch = s_hint = nullptr;
     s_stage = NONE;
 }
 
+// Kevin's Orb: the year's special day, first, with gold sparkles twinkling round the ring.
+void show_special() {
+    s_stage = SPECIAL;
+    s_since = lv_tick_get();
+    lv_label_set_text(s_title, s_spTitle);
+    lv_obj_set_style_text_color(s_title, lv_color_hex(COL_GOLD), 0);
+    lv_obj_set_style_text_font(s_body, size_for(strlen(s_spText), true), 0);
+    lv_label_set_text(s_body, s_spText);
+    lv_obj_align(s_body, LV_ALIGN_CENTER, 0, -6);
+    lv_obj_set_style_text_font(s_punch, &lv_font_montserrat_22, 0);
+    lv_label_set_text(s_punch, KEVIN_FAMILY_SIGN);
+    lv_obj_update_layout(s_body);
+    lv_obj_align_to(s_punch, s_body, LV_ALIGN_OUT_BOTTOM_MID, 0, 24);
+    lv_obj_clear_flag(s_punch, LV_OBJ_FLAG_HIDDEN);
+    lv_label_set_text(s_hint, "push for today's fact");
+    for (int i = 0; i < 12; ++i) {
+        lv_obj_t *d = lv_obj_create(s_root);
+        lv_obj_remove_style_all(d);
+        const int sz = (i % 3 == 0) ? 9 : 6;
+        lv_obj_set_size(d, sz, sz);
+        lv_obj_set_style_radius(d, LV_RADIUS_CIRCLE, 0);
+        lv_obj_set_style_bg_color(d, lv_color_hex(COL_GOLD), 0);
+        lv_obj_set_style_bg_opa(d, LV_OPA_COVER, 0);
+        lv_obj_clear_flag(d, LV_OBJ_FLAG_CLICKABLE);
+        const float a = i * 3.14159265f / 6 + 0.26f;
+        lv_obj_set_pos(d, 233 + (int)(196 * cosf(a)) - sz / 2, 233 + (int)(196 * sinf(a)) - sz / 2);
+        lv_anim_t an;
+        lv_anim_init(&an);
+        lv_anim_set_var(&an, d);
+        lv_anim_set_exec_cb(&an, sparkle_opa);
+        lv_anim_set_values(&an, 40, 255);
+        lv_anim_set_time(&an, 700 + (i % 4) * 180);
+        lv_anim_set_playback_time(&an, 700 + (i % 4) * 180);
+        lv_anim_set_delay(&an, i * 110);
+        lv_anim_set_repeat_count(&an, LV_ANIM_REPEAT_INFINITE);
+        lv_anim_start(&an);
+        s_sparkle[i] = d;
+    }
+    printf("[daily] special day: %s\n", s_spTitle);
+}
+
 void show_fact() {
+    sparkles_off();
+    lv_obj_set_style_text_color(s_title, lv_color_hex(COL_ACCENT), 0);
     s_stage = FACT;
     s_since = lv_tick_get();
     lv_label_set_text(s_title, "DENTAL FACT OF THE DAY");
@@ -181,7 +246,8 @@ void show_family() {
 }
 
 void advance() {
-    if (s_stage == FACT)       { if (s_setup[0]) show_joke(); else if (s_famText[0]) show_family(); else close_card(); }
+    if (s_stage == SPECIAL)    show_fact();
+    else if (s_stage == FACT)       { if (s_setup[0]) show_joke(); else if (s_famText[0]) show_family(); else close_card(); }
     else if (s_stage == JOKE)  reveal();
     else if (s_stage == PUNCH && s_famText[0]) show_family();
     else                       close_card();
@@ -190,7 +256,7 @@ void advance() {
 void tick(lv_timer_t *) {
     const uint32_t t = lv_tick_get() - s_since;
     if (s_stage == JOKE && t >= REVEAL_MS) reveal();
-    else if ((s_stage == FACT || s_stage == PUNCH || s_stage == FAMILY) && t >= STAGE_MS) advance();
+    else if ((s_stage == SPECIAL || s_stage == FACT || s_stage == PUNCH || s_stage == FAMILY) && t >= STAGE_MS) advance();
 }
 
 void touch_cb(lv_event_t *e) {
@@ -208,6 +274,27 @@ bool open_card(const struct tm &t) {
             snprintf(s_setup, sizeof s_setup, "%.159s", joke);
             snprintf(s_punchText, sizeof s_punchText, "%.119s", bar + 1);
         }
+    }
+    // The year's special day, if today is one: the file's words first, else the built-in ones.
+    s_spTitle[0] = s_spText[0] = '\0';
+    {
+        const int n = daily_text::countLines(SPECIAL_FILE);
+        char line[400];
+        for (int k = 0; k < n && !s_spTitle[0]; ++k) {
+            if (!daily_text::lineFor(SPECIAL_FILE, k, line, sizeof line)) break;
+            int mm = 0, dd = 0;
+            char *b1 = strchr(line, '|'), *b2 = b1 ? strchr(b1 + 1, '|') : nullptr;
+            if (!b2 || sscanf(line, "%d-%d", &mm, &dd) != 2) continue;
+            if (mm != t.tm_mon + 1 || dd != t.tm_mday) continue;
+            *b2 = '\0';
+            snprintf(s_spTitle, sizeof s_spTitle, "%.63s", b1 + 1);
+            snprintf(s_spText, sizeof s_spText, "%.299s", b2 + 1);
+        }
+        for (const Special &sp : BUILT_IN)
+            if (!s_spTitle[0] && sp.month == t.tm_mon + 1 && sp.day == t.tm_mday) {
+                snprintf(s_spTitle, sizeof s_spTitle, "%s", sp.title);
+                snprintf(s_spText, sizeof s_spText, "%s", sp.message);
+            }
     }
     // A note from Mom & Dad, when one is due: the next in turn, and from now on the clock
     // for the next one starts today. Marked as shown here, when the card opens, because the
@@ -264,7 +351,7 @@ bool open_card(const struct tm &t) {
     lv_obj_set_style_text_line_space(s_punch, 6, 0);
     s_hint = label(&lv_font_montserrat_12, COL_HINT, 384, 0);
 
-    show_fact();
+    if (s_spTitle[0]) show_special(); else show_fact();
     s_timer = lv_timer_create(tick, 100, nullptr);
     return true;
 }
@@ -292,6 +379,16 @@ bool daily_card::maybeShow() {
     if (s_stage != NONE || warp::active() || app_shell::browsing()) return false;
     struct tm t;
     if (!orb_local_time(&t)) return false;          // no date yet: nothing to choose from
+#ifndef ARDUINO
+    // Simulator: SIM_TODAY=2027-03-06 pretends it is that day (to see a special day).
+    if (const char *f = getenv("SIM_TODAY")) {
+        int y, m, d;
+        if (sscanf(f, "%d-%d-%d", &y, &m, &d) == 3) {
+            t.tm_year = y - 1900; t.tm_mon = m - 1; t.tm_mday = d; t.tm_hour = 12; t.tm_isdst = -1;
+            mktime(&t);                              // fills in the weekday and the day of the year
+        }
+    }
+#endif
     const int today = ymd(t);
     if (today == s_lastDay && !s_always) return false;
     if (!open_card(t)) return false;                // facts not on the card
