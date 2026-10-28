@@ -131,10 +131,12 @@ void render() {
     snprintf(buf, sizeof buf, "High %d\xC2\xB0  |  Low %d\xC2\xB0", w.hiF, w.loF);
     lv_label_set_text(s_hilo, buf);
 
-    // After sunset the next thing worth knowing is sunrise.
+    // In the dark the next thing worth knowing is sunrise: tomorrow's in the evening, today's
+    // in the small hours. In daylight, sunset.
     char sun[16];
-    const bool afterSunset = !w.isDay && now.tm_hour >= 12;
-    ampm(sun, sizeof sun, afterSunset ? w.sunriseNext : w.sunset);
+    const bool dark = !w.isDay;
+    const bool afterSunset = dark;
+    ampm(sun, sizeof sun, !dark ? w.sunset : (now.tm_hour >= 12 ? w.sunriseNext : w.sunrise));
     if (w.windMph > 0)
         snprintf(buf, sizeof buf, "Rain %d%%  |  Wind %s %d mph  |  %s %s", w.rainMax, compass(w.windDeg), w.windMph,
                  afterSunset ? "Sunrise" : "Sunset", sun);

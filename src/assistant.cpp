@@ -52,7 +52,8 @@ namespace {
 const int    SR          = 16000;
 const int    MAX_REC_S   = 15;                       // the longest question
 const int    REC_CAP     = SR * MAX_REC_S;           // samples
-const size_t TTS_MAX     = 3u * 1024 * 1024;         // ~60 s of 24 kHz speech
+const size_t TTS_MAX     = 1600u * 1024;            // ~34 s of 24 kHz speech (what is spoken is capped below)
+const size_t SPEAK_MAX   = 450;                      // characters spoken (~30 s at ~15 chars/s, inside TTS_MAX); the screen shows it all
 const int    HIST        = 3;                        // earlier exchanges kept for follow-ups
 
 // ---- shared state ------------------------------------------------------------------------
@@ -67,6 +68,12 @@ std::atomic<bool> s_tidy{false};          // the screen closed: the network task
 std::mutex s_textLock;
 struct Texts { char q[400]; char a[1200]; char err[160]; char rawA[1600]; };
 Texts *s_t = nullptr;                      // PSRAM
+
+// Working text for the network task, in PSRAM rather than on its stack: that task has 7 KB of
+// stack, and an HTTPS handshake needs several of them, so nothing large may sit on the stack
+// while a request is in flight.
+struct Work { char q[400]; char shown[400]; char a[1600]; char head[1024]; char sys[900]; };
+Work *s_w = nullptr;
 
 struct Hist { char q[300]; char a[900]; };
 Hist *s_hist = nullptr;                    // PSRAM, HIST entries, oldest first
@@ -157,8 +164,9 @@ const char *api_key() {
 bool ensure_buffers() {
     if (!s_t)    { s_t = (Texts *)ps_alloc(sizeof(Texts)); if (s_t) memset(s_t, 0, sizeof(Texts)); }
     if (!s_hist) { s_hist = (Hist *)ps_alloc(sizeof(Hist) * HIST); s_histN = 0; }
+    if (!s_w)    s_w = (Work *)ps_alloc(sizeof(Work));
     if (!s_rec)  s_rec = (int16_t *)ps_alloc(sizeof(int16_t) * REC_CAP);
-    return s_t && s_hist && s_rec;
+    return s_t && s_hist && s_w && s_rec;
 }
 
 // OpenAI's own words for what went wrong, in a sentence somebody can act on.
@@ -204,18 +212,19 @@ bool transcribe(char *text, size_t cap) {
 #endif
     const int n = s_recN;
     const char *B = "----KevinOrbAssistantBoundary";
-    char head[1024];
+    char *head = s_w->head;
+    const size_t HEAD = sizeof s_w->head;
     // The prompt gives the transcriber the names it would otherwise spell its own way
     // ("Dr. Holler"). Sent once; if a model ever refuses it, the request is repeated without.
     for (int attempt = 0; attempt < 2; ++attempt) {
         int h = 0;
-        h += snprintf(head + h, sizeof head - h, "--%s\r\nContent-Disposition: form-data; name=\"model\"\r\n\r\n%s\r\n", B, ASSIST_MODEL_STT);
+        h += snprintf(head + h, HEAD - h, "--%s\r\nContent-Disposition: form-data; name=\"model\"\r\n\r\n%s\r\n", B, ASSIST_MODEL_STT);
         if (attempt == 0) {
-            h += snprintf(head + h, sizeof head - h, "--%s\r\nContent-Disposition: form-data; name=\"language\"\r\n\r\nen\r\n", B);
-            h += snprintf(head + h, sizeof head - h, "--%s\r\nContent-Disposition: form-data; name=\"prompt\"\r\n\r\n"
+            h += snprintf(head + h, HEAD - h, "--%s\r\nContent-Disposition: form-data; name=\"language\"\r\n\r\nen\r\n", B);
+            h += snprintf(head + h, HEAD - h, "--%s\r\nContent-Disposition: form-data; name=\"prompt\"\r\n\r\n"
                           "Dr. Kevin Hollar, dentist, Bateman Dental, Nacogdoches, Lufkin, Cayleigh, Razorbacks, Longhorns.\r\n", B);
         }
-        h += snprintf(head + h, sizeof head - h, "--%s\r\nContent-Disposition: form-data; name=\"file\"; filename=\"question.wav\"\r\n"
+        h += snprintf(head + h, HEAD - h, "--%s\r\nContent-Disposition: form-data; name=\"file\"; filename=\"question.wav\"\r\n"
                       "Content-Type: audio/wav\r\n\r\n", B);
         char tail[64];
         const int t = snprintf(tail, sizeof tail, "\r\n--%s--\r\n", B);
@@ -255,10 +264,10 @@ bool answer(const char *question, char *out, size_t cap) {
 #if !defined(ARDUINO)
     if (mock()) { copy_str(out, cap, "A molar grinds and chews food. They are the broad, flat teeth at the back of your mouth."); return true; }
 #endif
-    char sys[900], today[64] = "";
+    char *sys = s_w->sys, today[64] = "";
     struct tm t;
     if (orb_local_time(&t)) strftime(today, sizeof today, " Today is %A, %B %d, %Y.", &t);
-    snprintf(sys, sizeof sys,
+    snprintf(sys, sizeof s_w->sys,
              "You are the voice assistant on a desk orb belonging to Dr. Kevin Hollar, a dentist at "
              "Bateman Dental in Nacogdoches, Texas, near Lufkin. Your answer will be read aloud and shown "
              "on a small round screen, so answer in plain, friendly spoken English: at most three short "
@@ -309,7 +318,16 @@ bool speak(const char *text) {
         JsonDocument d;
         d["model"] = ASSIST_MODEL_TTS;
         d["voice"] = ASSIST_VOICE;
-        d["input"] = text;
+        // Long answers are spoken up to a sentence end near SPEAK_MAX; the screen shows it all.
+        char *spoken = s_w->a;
+        if (text != spoken) copy_str(spoken, sizeof s_w->a, text);
+        if (strlen(spoken) > SPEAK_MAX) {
+            size_t cut = SPEAK_MAX;
+            while (cut > SPEAK_MAX / 2 && !(strchr(".!?", spoken[cut - 1]) && spoken[cut] == ' ')) --cut;
+            if (cut <= SPEAK_MAX / 2) cut = SPEAK_MAX;
+            spoken[cut] = 0;
+        }
+        d["input"] = spoken;
         d["response_format"] = "pcm";                     // raw 24 kHz, 16-bit, mono
         const size_t len = measureJson(d);
         char *body = (char *)ps_alloc(len + 1);
@@ -461,8 +479,7 @@ void assist_push() {
 }
 
 void assist_open() {
-    s_active = true;
-    s_tidy = false;
+    s_active = true;                                       // (a pending tidy still runs first; see assist_step)
     s_wantListen = s_stopRec = s_stopSpeak = false;
     s_histN = 0;                                           // a fresh conversation
     {
@@ -491,10 +508,9 @@ void assist_sim_capture(const int16_t *p, int n) {
 #endif
 
 bool assist_step() {
-    if (!s_active) {
-        if (s_tidy.exchange(false)) tidy();
-        return false;
-    }
+    // A close always gets its tidy, even if the screen was opened again before this ran.
+    if (s_tidy.exchange(false)) tidy();
+    if (!s_active) return false;
     if (s_state == AS_NOKEY) return false;
 
     // Start listening.
@@ -555,10 +571,9 @@ bool assist_step() {
             return true;
         }
         case AS_HEARD: {
-            char q[400];
-            if (!transcribe(q, sizeof q)) return true;
-            char shown[400];
-            to_ascii(shown, sizeof shown, q);
+            char *q = s_w->q, *shown = s_w->shown;
+            if (!transcribe(q, sizeof s_w->q)) return true;
+            to_ascii(shown, sizeof s_w->shown, q);
             if (!shown[0] || strspn(shown, " .") == strlen(shown)) {
                 set_error("Sorry, I couldn't make that out. Push and try again.");
                 return true;
@@ -573,12 +588,12 @@ bool assist_step() {
             return true;
         }
         case AS_THINKING: {
-            char q[400], a[1600];
+            char *q = s_w->q, *a = s_w->a;
             {
                 std::lock_guard<std::mutex> l(s_textLock);
-                copy_str(q, sizeof q, s_t->rawA);
+                copy_str(q, sizeof s_w->q, s_t->rawA);
             }
-            if (!answer(q, a, sizeof a)) return true;
+            if (!answer(q, a, sizeof s_w->a)) return true;
             {
                 std::lock_guard<std::mutex> l(s_textLock);
                 copy_str(s_t->rawA, sizeof s_t->rawA, a);
@@ -589,10 +604,10 @@ bool assist_step() {
             return true;
         }
         case AS_VOICING: {
-            char a[1600];
+            char *a = s_w->a;
             {
                 std::lock_guard<std::mutex> l(s_textLock);
-                copy_str(a, sizeof a, s_t->rawA);
+                copy_str(a, sizeof s_w->a, s_t->rawA);
             }
             free_play();
             if (!speak(a)) { s_state = AS_ERROR; return true; }

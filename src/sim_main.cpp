@@ -1241,6 +1241,7 @@ int main(int argc, char **argv) {
         simknob::injectTurn(+1); pump();
         printf("[selftest] browsing turns: %s (idx %d, browsing=%d)\n", app_shell::name(), app_shell::index(), app_shell::browsing());
         press();
+        { uint32_t t0 = SDL_GetTicks(); while (warp::active() && SDL_GetTicks() - t0 < 3000) { SDL_Delay(10); lv_tick_inc(10); pump(); } }  // Kevin's Orb: the warp animates on LVGL's clock, which this test must advance
         printf("[selftest] press -> committed to %s (idx %d, browsing=%d)\n", app_shell::name(), app_shell::index(), app_shell::browsing());
         printf("[selftest] switcher cycles and commits: %s\n",
                (!app_shell::browsing() && app_shell::index() != browseStart) ? "PASS" : "FAIL");

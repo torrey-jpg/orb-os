@@ -191,7 +191,7 @@ bool news_fox_fetch(int want, IntelSnapshot &out) {
         IntelItem &it = snap.items[snap.count];
         key_of(full, it.key);
         cut(full, HEADLINE_MAX);
-        snprintf(it.text, sizeof it.text, "%s", full);
+        snprintf(it.text, sizeof it.text, "%.*s", (int)sizeof it.text - 1, full);   // already cut to 70
         snprintf(it.source, sizeof it.source, "Fox News");
         return ++snap.count < want;
     });
