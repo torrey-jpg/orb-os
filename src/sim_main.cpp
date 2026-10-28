@@ -2537,10 +2537,15 @@ int main(int argc, char **argv) {
             if (saverStep == 0 && now - start > 9000) {
                 app_shell::selectApp(app_shell::APP_TOOTH);
                 saverStep = 1; saverAt = now;
+            } else if (saverStep >= 1 && saverStep < 100 && getenv("SIM_SAVER_FRAMES") && screensaver::showing() && now - saverAt > 60) {
+                // Kevin's Orb: SIM_SAVER_FRAMES=n films n frames, for a moving preview
+                snprintf(path, sizeof(path), "%s-f%03d.bmp", saverShot, saverStep); sim_save_frame(path);
+                ++saverStep; saverAt = now;
+                if (saverStep > atoi(getenv("SIM_SAVER_FRAMES"))) run = false;
             } else if (saverStep >= 1 && saverStep <= 3 && screensaver::showing() && now - saverAt > 1200) {
                 snprintf(path, sizeof(path), "%s-%d.bmp", saverShot, saverStep); sim_save_frame(path);
                 ++saverStep; saverAt = now;
-            } else if (saverStep == 4) {
+            } else if (saverStep == 4 && !getenv("SIM_SAVER_FRAMES")) {
                 const int before = toothview::current();
                 input_router::dispatch(1, false);      // a turn: should only wake it
                 printf("[savershot] showing=%d tooth %d -> %d (expect unchanged)\n",

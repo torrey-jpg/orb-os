@@ -1,6 +1,8 @@
 // Kevin's Orb — the hologram screensaver. See screensaver.h.
 #include "screensaver.h"
 #include "app_shell.h"
+#include "config.h"
+#include "saver_scene.h"
 #include "daily_card.h"
 #include "orb_time.h"
 #include "tooth_data.h"
@@ -58,6 +60,19 @@ lv_img_dsc_t s_dsc;
 int          s_num    = 1;
 int          s_yaw    = 0;
 uint32_t     s_t0 = 0, s_lastSpin = 0, s_lastSwap = 0, s_glitchUntil = 0;
+
+// Picture scenes (saver_scene.*). Each start takes the next turn: hologram, then each picture.
+#ifndef KEVIN_SAVER_SCENES
+#define KEVIN_SAVER_SCENES 0
+#endif
+#ifndef KEVIN_SAVER_SCENE_MS
+#define KEVIN_SAVER_SCENE_MS (3UL * 60UL * 1000UL)
+#endif
+int          s_turn = 0;               // which one starts next (0 = hologram)
+int          s_scene = -1;             // the picture showing, or -1 for the hologram
+uint32_t     s_sceneSince = 0;
+uint32_t     s_sceneMs = KEVIN_SAVER_SCENE_MS;
+int          s_forceScene = -1;        // simulator: SIM_SAVER_SCENE=<name>
 
 uint32_t idle_ms() {
     // The screen's own clock covers touches (LVGL's pointer input); the knob is counted here
@@ -117,6 +132,23 @@ void anim(lv_timer_t *) {
     const uint32_t now = lv_tick_get();
     const uint32_t t = now - s_t0;
 
+    if (s_scene >= 0) {
+        // A picture: its own lights move; a different picture every s_sceneMs.
+        if (now - s_sceneSince >= s_sceneMs) {
+            s_sceneSince = now;
+            const int n = saver_scene::count();
+            for (int k = 1; k <= n; ++k) {
+                const int next = (s_scene + k) % n;
+                if (saver_scene::show(s_root, next)) { s_scene = next; break; }
+            }
+            if (!saver_scene::active()) { hide(); return; }
+            lv_obj_move_foreground(s_time);
+        }
+        saver_scene::tick();
+        if (t % 1000 < FRAME_MS) update_time();
+        return;
+    }
+
     // A different tooth every SWAP_MS, through a short glitch.
     if (now - s_lastSwap >= SWAP_MS) {
         s_lastSwap = now;
@@ -174,6 +206,35 @@ void show() {
     lv_obj_add_flag(s_root, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(s_root, touch_cb, LV_EVENT_PRESSED, nullptr);
 
+    // Whose turn is it: the hologram, or one of the pictures?
+    s_scene = -1;
+#if KEVIN_SAVER_SCENES
+    {
+        const int n = saver_scene::count();
+        int want = s_forceScene >= 0 ? s_forceScene + 1 : s_turn;
+        s_turn = (s_turn + 1) % (n + 1);
+        if (want > 0 && saver_scene::show(s_root, want - 1)) s_scene = want - 1;
+    }
+#endif
+    if (s_scene >= 0) {
+        s_time = lv_label_create(s_root);
+        lv_obj_set_style_text_font(s_time, &lv_font_montserrat_24, 0);
+        lv_obj_set_style_text_color(s_time, lv_color_white(), 0);
+        lv_obj_set_style_text_opa(s_time, LV_OPA_90, 0);
+        lv_obj_set_style_bg_color(s_time, lv_color_black(), 0);   // a faint pill so it reads on any picture
+        lv_obj_set_style_bg_opa(s_time, LV_OPA_40, 0);
+        lv_obj_set_style_radius(s_time, 14, 0);
+        lv_obj_set_style_pad_hor(s_time, 12, 0);
+        lv_obj_set_style_pad_ver(s_time, 3, 0);
+        lv_obj_align(s_time, LV_ALIGN_TOP_MID, 0, 34);
+        lv_obj_clear_flag(s_time, LV_OBJ_FLAG_CLICKABLE);
+        s_t0 = s_sceneSince = lv_tick_get();
+        update_time();
+        s_anim = lv_timer_create(anim, FRAME_MS, nullptr);
+        printf("[saver] on (picture %s)\n", saver_scene::name(s_scene));
+        return;
+    }
+
     s_body = lv_obj_create(s_root);
     lv_obj_remove_style_all(s_body);
     lv_obj_set_size(s_body, 466, 466);
@@ -219,7 +280,11 @@ void show() {
     s_t0 = s_lastSpin = s_lastSwap = now;
     s_glitchUntil = 0;
     s_yaw = rand() % 24;
-    pick_tooth(1 + rand() % 32);
+    int first = 1 + rand() % 32;
+#ifndef ARDUINO
+    if (const char *e = getenv("SIM_SAVER_TOOTH")) first = atoi(e);   // simulator: start on this tooth
+#endif
+    pick_tooth(first);
     update_time();
     s_anim = lv_timer_create(anim, FRAME_MS, nullptr);
     printf("[saver] on (tooth #%d)\n", s_num);
@@ -228,6 +293,8 @@ void show() {
 void hide() {
     if (!s_root) return;
     if (s_anim) { lv_timer_del(s_anim); s_anim = nullptr; }
+    saver_scene::hide();                 // before the root goes: it deletes its own objects
+    s_scene = -1;
     lv_obj_del(s_root);
     s_root = s_body = s_img = s_emitter = s_scan = s_label = s_time = nullptr;
     if (s_pix) { heap_caps_free(s_pix); s_pix = nullptr; }
@@ -248,6 +315,11 @@ void check(lv_timer_t *) {
 void screensaver::begin() {
 #ifndef ARDUINO
     if (const char *e = getenv("SIM_SAVER_MS")) s_idleMs = (uint32_t)atol(e);
+    if (const char *e = getenv("SIM_SAVER_SCENE_MS")) s_sceneMs = (uint32_t)atol(e);
+    if (const char *e = getenv("SIM_SAVER_SCENE")) {
+        for (int i = 0; i < saver_scene::count(); ++i)
+            if (strcmp(e, saver_scene::name(i)) == 0) s_forceScene = i;
+    }
 #endif
     s_lastKnob = lv_tick_get();
     if (!s_check) s_check = lv_timer_create(check, CHECK_MS, nullptr);

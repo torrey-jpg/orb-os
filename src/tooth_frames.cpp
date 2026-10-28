@@ -57,7 +57,9 @@ int line_cb(PNGDRAW *d) {
         if (g_tint == ToothFrames::HOLOGRAM) {
             int l = (src[0] * 3 + src[1] * 6 + src[2]) / 10;   // brightness
             if (scanRow) l = l * 2 / 5;
-            v = rgb565(l * 48 / 100, l * 88 / 100, l * 118 / 100 + 20);   // sky-blue glow
+            // sky-blue glow. The blue lift fades out toward black (it used to be a flat +20,
+            // which painted the empty background navy: a visible box on the AMOLED).
+            v = rgb565(l * 48 / 100, l * 88 / 100, l * 118 / 100 + (l < 20 ? l : 20));
         } else {
             v = rgb565(src[0], src[1], src[2]);
         }

@@ -71,6 +71,12 @@
 // .gitignore keeps off GitHub). They take turns in order. 0 = off.
 #define KEVIN_FAMILY_EVERY 3
 #define KEVIN_FAMILY_SIGN  "Love, Mom & Dad"
+// Kevin's Orb: the screensaver takes turns between the blue hologram tooth and original
+// pictures with live light on top (cosmic, ocean, glowing tooth, northern lights), each
+// /saver/<name>.png on the SD card. A different one each time it starts, and the picture
+// changes every KEVIN_SAVER_SCENE_MS while it runs. 0 = hologram only.
+#define KEVIN_SAVER_SCENES   1
+#define KEVIN_SAVER_SCENE_MS (3UL * 60UL * 1000UL)
 
 // ---------- Home location ----------
 // A PLACEHOLDER, and deliberately not a place. The device has exactly two location inputs
