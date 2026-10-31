@@ -7,6 +7,9 @@
 #include "config.h"
 #include "radar_view.h"
 #include "ui.h"
+#if KEVIN_TOUCH
+#include "touch_cst9217.h"   // Kevin's Orb: the touchscreen
+#endif
 
 #include <Arduino.h>
 #include <Arduino_GFX_Library.h>
@@ -499,6 +502,41 @@ bool begin() {
 
     // No touch indev is registered. Knob only. See the note above touch_read_cb's
     // former home, further up this file.
+#if KEVIN_TOUCH
+    // Kevin's Orb: except here, where the finger is wanted too. The chip reports where it was
+    // touched on the glass; when the picture is turned (Settings rotation), the point is
+    // turned back the same way, so a finger lands on what is drawn under it.
+    if (touch_begin()) {
+        static lv_indev_drv_t s_touchDrv;
+        lv_indev_drv_init(&s_touchDrv);
+        s_touchDrv.type = LV_INDEV_TYPE_POINTER;
+        s_touchDrv.read_cb = [](lv_indev_drv_t *, lv_indev_data_t *data) {
+            uint16_t x, y;
+            if (touch_read(&x, &y)) {
+                float px = (float)x, py = (float)y;
+                if (s_rot != 0) {
+                    // the inverse of flush_arbitrary's logical -> physical turn
+                    const float cx = (SCREEN_W - 1) * 0.5f, cy = (SCREEN_H - 1) * 0.5f;
+                    const float rx = px - cx, ry = py - cy;
+                    px = cx + s_rotCos * rx + s_rotSin * ry;
+                    py = cy - s_rotSin * rx + s_rotCos * ry;
+                }
+                int lx = (int)lroundf(px), ly = (int)lroundf(py);
+                if (lx < 0) lx = 0;
+                if (lx > SCREEN_W - 1) lx = SCREEN_W - 1;
+                if (ly < 0) ly = 0;
+                if (ly > SCREEN_H - 1) ly = SCREEN_H - 1;
+                data->point.x = (lv_coord_t)lx;
+                data->point.y = (lv_coord_t)ly;
+                data->state = LV_INDEV_STATE_PRESSED;
+            } else {
+                data->state = LV_INDEV_STATE_RELEASED;   // LVGL keeps the last point
+            }
+        };
+        lv_indev_drv_register(&s_touchDrv);
+        Serial.println("[display] touch registered");
+    }
+#endif
 
     Serial.printf("[display] PSRAM free: %u KB\n", (unsigned)(ESP.getFreePsram() / 1024));
     dmark("before ui_create");

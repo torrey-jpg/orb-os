@@ -81,6 +81,10 @@
 // location lookup stores a fixed offset with no DST rule, which goes an hour wrong at the
 // next change; with this set, any Central-looking offset becomes the full Central rule.
 #define KEVIN_TZ "CST6CDT,M3.2.0,M11.1.0"
+// Kevin's Orb: the touchscreen (CST9217) as well as the knob. Zion's Orb is knob-only; Kevin's
+// screens were built to take a finger too (drag to spin a tooth, tap to wake the screensaver).
+// 0 = knob only, as Zion ships it.
+#define KEVIN_TOUCH 1
 
 // ---------- Home location ----------
 // A PLACEHOLDER, and deliberately not a place. The device has exactly two location inputs
