@@ -485,7 +485,9 @@ void audio_preview_chime(int idx) {   // ignores mute, like audio_selftest() —
 
 // ---- Kevin's Orb: the microphones ------------------------------------------------------------
 // The ES7210 (I2C 0x40) is set up the way Waveshare's examples set it up: slave, standard I2S,
-// 16-bit, 16 kHz, MIC1 and MIC2 at 24 dB (Waveshare's CODEC_DEFAULT_ADC_VOLUME for this board).
+// 16-bit, 16 kHz, MIC1 and MIC2 at 36 dB. Waveshare's default is 24 dB, but on the real Orb
+// (2026-10-30) speech a foot away measured only ~140 RMS at 24 dB, too quiet to be heard as a
+// question; 36 dB is four times louder and still far from clipping.
 // MIC3 carries the speaker's own signal as an echo reference and is left off. The ADC needs
 // the I2S clocks running, which they are whenever the driver is installed.
 static bool es7210_setup() {
@@ -502,7 +504,7 @@ static bool es7210_setup() {
     es7210_adc_init(&Wire, &cfg);
     es7210_adc_config_i2s(cfg.codec_mode, &cfg.i2s_iface);
     es7210_mic_select((es7210_input_mics_t)(ES7210_INPUT_MIC1 | ES7210_INPUT_MIC2));
-    es7210_adc_set_gain((es7210_input_mics_t)(ES7210_INPUT_MIC1 | ES7210_INPUT_MIC2), GAIN_24DB);
+    es7210_adc_set_gain((es7210_input_mics_t)(ES7210_INPUT_MIC1 | ES7210_INPUT_MIC2), GAIN_36DB);
     es7210_adc_ctrl_state(cfg.codec_mode, AUDIO_HAL_CTRL_START);
     s_es7210Ready = true;
     Serial.println("[mic] ES7210 ready");

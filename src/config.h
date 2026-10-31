@@ -77,6 +77,10 @@
 // changes every KEVIN_SAVER_SCENE_MS while it runs. 0 = hologram only.
 #define KEVIN_SAVER_SCENES   1
 #define KEVIN_SAVER_SCENE_MS (3UL * 60UL * 1000UL)
+// Kevin's Orb: always US Central time with daylight saving (Nacogdoches / Lufkin). Zion's
+// location lookup stores a fixed offset with no DST rule, which goes an hour wrong at the
+// next change; with this set, any Central-looking offset becomes the full Central rule.
+#define KEVIN_TZ "CST6CDT,M3.2.0,M11.1.0"
 
 // ---------- Home location ----------
 // A PLACEHOLDER, and deliberately not a place. The device has exactly two location inputs

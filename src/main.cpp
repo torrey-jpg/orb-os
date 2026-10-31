@@ -714,7 +714,11 @@ static void loadSettings() {
     g_wxZoomTier       = 0;   // lean redesign: weather map is a single fixed 50mi range now
                               // (tier 0). Zoom is gone (see weather_press_cycle), so this is
                               // pinned to 0 regardless of any old saved "wxZoom2" value.
+#ifdef KEVIN_TZ
+    g_tz               = p.getString("tz", KEVIN_TZ);   // Kevin's Orb: Central until told otherwise
+#else
     g_tz               = p.getString("tz", TZ_STR);
+#endif
     // Migrate off the old forked-in Spain default so a device that has it saved (from
     // before the default changed) still lands on local time. Re-locating overwrites this.
     if (g_tz == "CET-1CEST,M3.5.0,M10.5.0/3") g_tz = TZ_STR;
@@ -1279,6 +1283,11 @@ void host_recents_add(const char *name, double lat, double lon);   // defined be
 // POSIX DST rules would need a full timezone database the device doesn't carry.
 static void posix_tz_from_offset(long offsetSec, char *out, size_t n) {
     const long offMin  = offsetSec / 60;    // minutes east of UTC (Arizona: -420)
+#ifdef KEVIN_TZ
+    // Kevin's Orb: Central standard (-360) or Central daylight (-300) means Central, with its
+    // DST rule, so the clock changes itself every March and November.
+    if (offMin == -360 || offMin == -300) { snprintf(out, n, "%s", KEVIN_TZ); return; }
+#endif
     const long westMin = -offMin;           // POSIX offset field is positive west of UTC
     const char sign = offMin < 0 ? '-' : '+';
     const int aH = (int)(labs(offMin) / 60), aM = (int)(labs(offMin) % 60);

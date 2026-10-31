@@ -101,7 +101,7 @@ bool vad_feed(const int16_t *p, int n) {
     s_vad.ms += ms;
     if (s_vad.ms <= 300 && rms < s_vad.floor) s_vad.floor = rms;   // the room, before speaking
     const float floor = s_vad.floor < 1e8f ? s_vad.floor : rms;
-    const float thr = floor * 3.0f > 400.0f ? floor * 3.0f : 400.0f;
+    const float thr = floor * 3.0f > 250.0f ? floor * 3.0f : 250.0f;   // three times the room, at least 250
     int lvl = (int)(rms / 40.0f);
     s_level = lvl > 100 ? 100 : lvl;
     if (rms > thr) { s_vad.speech = true; s_vad.speechMs += ms; s_vad.silentMs = 0; }
